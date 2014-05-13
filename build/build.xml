@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="SocialAS3 Builder" basedir="../" default="build">
+	
+	<!--location of property file -->
+	<property file="./build/build.properties" description="properties for builds" />
+	
+	<taskdef resource="flexTasks.tasks" classpath="${FLEXTASKS_FILE}" />
+		
+	<target name="clean">
+		<echo>Deleting Deploy SWC Directory...</echo>
+		<delete dir="${RELEASE_DIR}" failOnError="false" includeEmptyDirs="true" />
+		<echo>Deleted Deploy SWC Directory</echo>
+		<echo>Creating Deploy SWC Directory...</echo>
+		<mkdir dir="${RELEASE_DIR}" />
+		<echo>Created Deploy SWC Directory</echo>
+	</target>
+	
+	<!--build Ovation swc -->
+	<target name="build" depends="clean">
+		<compc output="${RELEASE_DIR}/SocialAS3.swc" debug="${DEBUG_FLAG}">
+			<load-config filename="${FLEX_HOME}/frameworks/air-config.xml"/>
+			<source-path path-element="${MAIN_DIR}/src" />
+			<include-sources dir="${MAIN_DIR}/src" includes="*"/>
+			
+			<compiler.include-libraries dir="${MAIN_DIR}/libs" append="true">
+                <include name="signals.swc" />
+            </compiler.include-libraries>
+
+			<jvmarg value="-Xmx1024m"/>
+		</compc>
+	</target>
+
+</project>
