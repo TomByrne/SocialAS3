@@ -24,26 +24,58 @@ package social.gateway.jsonRest
 		{
 			return function(obj:Object):*{
 				var ret:Object = new klass;
-				obj["*"] = obj; // allows for splitting data definitions (e.g. User/Role)
-				
-				for(var i:String in propMapper){
-					var value:* = getProp(obj, i);
-					var dest:String = propMapper[i];
-					if(childParsers){
-						var parser:Function = childParsers[i];
-						if(parser!=null && value!=null){
-							value = parser(value);
-						}
-					}
-					if(dest){
-						if(dest.indexOf("()")==dest.length-2){
-							ret[dest.substr(0, dest.length-2)](value);
-						}else{
-							ret[dest] = value;
-						}
+				fillObject(ret, obj, childParsers, propMapper);
+				return ret;
+			}
+		}
+		
+		public static function createConditionalParser(conditionalParsers:Object, defKlass:*=null, childParsers:Object = null, propMapper:Object=null):Function
+		{
+			return function(obj:Object):*{
+				var ret:Object;
+				var value:*;
+				for(var cond:String in conditionalParsers){
+					value = getProp(obj, cond);
+					if(value && value!="false"){
+						ret = conditionalParsers[cond](obj);
+						break;
 					}
 				}
+				if(!ret){
+					if(defKlass!=null){
+						if(defKlass is Class){
+							ret = new defKlass();
+						}else{
+							ret = defKlass(obj);
+						}
+					}else{
+						throw new Error("No class found for response: "+obj);
+					}
+				}
+				fillObject(ret, obj, childParsers, propMapper);
 				return ret;
+			}
+		}
+		
+		private static function fillObject(ret:Object, obj:Object, childParsers:Object, propMapper:Object):void
+		{
+			obj["*"] = obj; // allows for splitting data definitions (e.g. User/Role)
+			for(var i:String in propMapper){
+				var value:* = getProp(obj, i);
+				var dest:String = propMapper[i];
+				if(childParsers){
+					var parser:Function = childParsers[i];
+					if(parser!=null && value!=null){
+						value = parser(value);
+					}
+				}
+				if(dest){
+					if(dest.indexOf("()")==dest.length-2){
+						ret[dest.substr(0, dest.length-2)](value);
+					}else{
+						ret[dest] = value;
+					}
+				}
 			}
 		}
 		
@@ -52,6 +84,7 @@ package social.gateway.jsonRest
 			var pathParts:Array = propName.split(".");
 			for(var i:int=0; i<pathParts.length; ++i){
 				obj = obj[pathParts[i]];
+				if(!obj)return null;
 			}
 			return obj;
 		}
@@ -71,13 +104,15 @@ package social.gateway.jsonRest
 				return ret;
 			}
 		}
-		public static function createHandler(parser:Function):Function
+		public static function createHandler(parser:Function, dataProp:String=null):Function
 		{
 			return function(success:String, fail:*, onComplete:Function):void{
 				if(fail){
 					if(onComplete!=null)onComplete(null, fail || true);
 				}else{
-					var res:* = parser( JSON.parse( success ).data );
+					var data:* = JSON.parse( success );
+					if(dataProp)data = data[dataProp];
+					var res:* = parser( data );
 					if(onComplete!=null){
 						onComplete( res || true, null);
 					}
@@ -117,19 +152,8 @@ package social.gateway.jsonRest
 			var request:URLRequest;
 			var urlVars:URLVariables;
 			
-			//urlProvider.setToken(URL_ACCESS_TOKEN, _oauth.accessToken);
-			//urlProvider.setToken(URL_ENDPOINT, endPoint);
-			
 			var prop:String;
 			var val:*;
-			/*for each(var tokens:Object in tokenLists){
-				for ( prop in tokens )
-				{
-					val = tokens[prop]; 
-					urlProvider.setToken(prop, val || "");
-				}
-			}*/
-			
 			
 			var url:String = urlProvider.url;
 			for ( prop in args )

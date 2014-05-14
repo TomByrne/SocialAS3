@@ -1,14 +1,30 @@
 package social.instagram
 {
-	import flash.display.Stage;
-	import flash.media.StageWebView;
-	
 	import org.osflash.signals.Signal;
 	
 	import social.web.IWebView;
 
 	public class Instagram
 	{
+		
+		public function get manageSession():Boolean
+		{
+			return _platform.manageSession;
+		}
+		public function set manageSession(value:Boolean):void
+		{
+			_platform.manageSession = value;
+		}
+		
+		public function get accessToken():String
+		{
+			return _platform.accessToken;
+		}
+		public function set accessToken(value:String):void
+		{
+			_platform.accessToken = value;
+		}
+
 		public function get stateChanged():Signal{
 			return _platform.stateChanged;
 		}
@@ -29,16 +45,12 @@ package social.instagram
 		
 		public function init(clientId:String, redirectUrl:String):void
 		{
-			//_oauthUrl.setToken(URL_CLIENT_ID, clientId);
-			//_oauthUrl.setToken(URL_REDIRECT_URL, redirectUrl);
-			//_oauth.init(_oauthUrl, checkAuthUrl, "access_token", stage, webView, closure(onOAuthComplete, [onComplete], true));
-			
 			_platform.setProp(InstagramPlatform.URL_CLIENT_ID, clientId);
 			_platform.setProp(InstagramPlatform.URL_REDIRECT_URL, redirectUrl);
 		}
-		public function authenticate():void
+		public function authenticate(showImmediately:Boolean = true, onComplete:Function=null):void
 		{
-			_platform.doCall(InstagramPlatform.CALL_AUTH, {});
+			_platform.doCall(InstagramPlatform.CALL_AUTH, {showImmediately:showImmediately}, onComplete);
 		}
 		public function cancelAuth():void{
 			_platform.cancelAuth();

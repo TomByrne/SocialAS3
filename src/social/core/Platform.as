@@ -17,8 +17,13 @@ package social.core
 
 	public class Platform
 	{
+
 		protected static function a(name:String, desc:String, optional:Boolean=false, def:*=null):ArgDesc{
 			return new ArgDesc(name, desc, optional, def);
+		}
+		
+		public function get label():String{
+			return _platformId;
 		}
 		
 		public function get stateChanged():Signal{
@@ -54,6 +59,9 @@ package social.core
 		}
 		public function get props():Vector.<PropDesc>{
 			return _props;
+		}
+		public function get calls():Vector.<CallDesc>{
+			return _callList;
 		}
 		
 		protected var _auth:IAuth;
@@ -110,7 +118,7 @@ package social.core
 			if(_webView)gateway.setWebView(_webView);
 		}
 		
-		protected function addCall(gatewayId:String, callId:String, args:Array, url:IUrlProvider, desc:String = null, resultHandler:Function=null, urlTokens:Object=null, protocol:String=null):void
+		protected function addCall(gatewayId:String, callId:String, availableState:String, args:Array, url:IUrlProvider, desc:String = null, resultHandler:Function=null, urlTokens:Object=null, protocol:String=null):void
 		{
 			if(urlTokens){
 				var proxy:UrlProxy = new UrlProxy(url);
@@ -119,9 +127,19 @@ package social.core
 				}
 				url = proxy;
 			}
-			var callDesc:CallDesc = new CallDesc(gatewayId, callId, args, url, desc, resultHandler, protocol);
+			var callDesc:CallDesc = new CallDesc(gatewayId, callId, availableState, args, url, desc, resultHandler, protocol);
 			_calls[callId] = callDesc;
 			_callList.push(callDesc);
+		}
+		protected function onLogout(success:*, fail:*, onComplete:Function=null):void
+		{
+			_stateObj.state = PlatformState.STATE_UNAUTHENTICATED;
+			_auth.accessToken = null;
+			if(fail){
+				if(onComplete!=null)onComplete(null, true);
+			}else{
+				if(onComplete!=null)onComplete(true, null);
+			}
 		}
 		public function doCall(callId:String, argVals:Object, onComplete:Function=null):void
 		{
@@ -133,8 +151,12 @@ package social.core
 			
 			var callDesc:CallDesc = _calls[callId];
 			for each(var arg:ArgDesc in callDesc.args){
-				if(!arg.optional && !argVals.hasOwnProperty(arg.name)){
-					throw new Error("Argument "+arg.name+" must be provided.");
+				if(!argVals.hasOwnProperty(arg.name)){
+					if(!arg.optional){
+						throw new Error("Argument "+arg.name+" must be provided.");
+					}else{
+						argVals[arg.name] = arg.def;
+					}
 				}
 			}
 			
@@ -153,25 +175,6 @@ package social.core
 				_stateObj.state = PlatformState.STATE_UNAUTHENTICATED;
 			}
 			
-		}
-		
-		private function onLogout(success:String, fail:*, onComplete:Function):void
-		{
-			_stateObj.state = PlatformState.STATE_UNAUTHENTICATED;
-			_auth.accessToken = null;
-			if(fail){
-				if(onComplete!=null)onComplete(null, true);
-			}else{
-				if(onComplete!=null)onComplete(true, null);
-			}
-		}
-		
-		private function checkAuthUrl(url:String):Boolean{
-			return (
-				url.indexOf("instagram.com/accounts/login")!=-1 ||
-				url.indexOf("instagram.com/accounts/password")!=-1 ||
-				url.indexOf("instagram.com/oauth")!=-1
-			);
 		}
 		
 		private function onOAuthComplete(success:*, fail:*, onComplete:Function):void

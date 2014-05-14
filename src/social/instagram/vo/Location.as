@@ -1,4 +1,4 @@
-package social.vo
+package social.instagram.vo
 {
 	/**
 	 * ...

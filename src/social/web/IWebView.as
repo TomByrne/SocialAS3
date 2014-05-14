@@ -5,8 +5,9 @@ package social.web
 	public interface IWebView
 	{
 		function get loadComplete():Signal;
+		function get locationChanged():Signal;
 		
-		function showView(url:String):void;
+		function showView(url:String, showImmediately:Boolean):void;
 		function hideView():void;
 		
 		function get location():String;

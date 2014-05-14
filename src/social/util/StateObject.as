@@ -30,7 +30,7 @@ package social.util
 			if(_stateIndex==value)return;
 			
 			_stateIndex = value;
-			_state = _states[value];
+			_state = value==-1?null:_states[value];
 			
 			var calls:Array = _queueMap[_state];
 			if(calls){

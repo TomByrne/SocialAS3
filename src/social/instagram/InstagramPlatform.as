@@ -1,21 +1,17 @@
 package social.instagram
 {
-	import flash.display.Stage;
-	import flash.media.StageWebView;
-	
 	import social.auth.oauth2.OAuth2;
 	import social.core.IUrlProvider;
 	import social.core.Platform;
 	import social.core.PlatformState;
 	import social.core.UrlProvider;
 	import social.desc.ArgDesc;
-	import social.desc.PropDesc;
 	import social.gateway.jsonRest.JsonRest;
-	import social.vo.Location;
-	import social.vo.Photo;
-	import social.vo.PhotoSize;
-	import social.vo.Tag;
-	import social.vo.User;
+	import social.instagram.vo.Location;
+	import social.instagram.vo.Photo;
+	import social.instagram.vo.PhotoSize;
+	import social.instagram.vo.Tag;
+	import social.instagram.vo.User;
 	import social.web.StageWebViewProxy;
 
 	public class InstagramPlatform extends Platform
@@ -84,14 +80,14 @@ package social.instagram
 			var parsePhoto:Function = JsonRest.createParser(Photo, {"images":parsePhotoSizes, "user":parseUser, "location":parseLocation},
 				{"id":"id", "type":"type", "images":"sizes", "created_time":"creation", "likes":"likes", "user":"user", "location":"location", "tags":"tags"});
 			
-			var onUser:Function = JsonRest.createHandler(parseUser);
-			var onUsers:Function = JsonRest.createHandler(JsonRest.createArrParser(parseUser));
-			var onPhoto:Function = JsonRest.createHandler(parsePhoto);
-			var onPhotos:Function = JsonRest.createHandler(JsonRest.createArrParser(parsePhoto));
-			var onLocation:Function = JsonRest.createHandler(parseLocation);
-			var onLocations:Function = JsonRest.createHandler(JsonRest.createArrParser(parseLocation));
-			var onTag:Function = JsonRest.createHandler(parseTag);
-			var onTags:Function = JsonRest.createHandler(parseTags);
+			var onUser:Function = JsonRest.createHandler(parseUser, "data");
+			var onUsers:Function = JsonRest.createHandler(JsonRest.createArrParser(parseUser), "data");
+			var onPhoto:Function = JsonRest.createHandler(parsePhoto, "data");
+			var onPhotos:Function = JsonRest.createHandler(JsonRest.createArrParser(parsePhoto), "data");
+			var onLocation:Function = JsonRest.createHandler(parseLocation, "data");
+			var onLocations:Function = JsonRest.createHandler(JsonRest.createArrParser(parseLocation), "data");
+			var onTag:Function = JsonRest.createHandler(parseTag, "data");
+			var onTags:Function = JsonRest.createHandler(parseTags, "data");
 			
 			
 			_oauthUrl = new UrlProvider(true, AUTH_URL);
@@ -102,7 +98,7 @@ package social.instagram
 			_callUrl = new UrlProvider(true, API_URL);
 			_logoutUrl = new UrlProvider(true, LOGOUT_URL);
 			
-			_oauth = new OAuth2(checkAuthUrl, "access_token");
+			_oauth = new OAuth2(checkAuthUrl);
 			_oauth.accessTokenChanged.add(onTokenChanged);
 			super("Instagram_v1", _oauth);
 			
@@ -124,57 +120,59 @@ package social.instagram
 			var maxTime:ArgDesc 		= a("max_timestamp", "Return media before this UNIX timestamp", true);
 			var count:ArgDesc 			= a("count", "Count of media to return", true);
 			
-			addCall(GATEWAY_OAUTH, CALL_AUTH, [], _oauthUrl, "Checks whether session can be revived.", null, {doAuth:true});
-			addEndpointCall(GATEWAY_JSON, CALL_LOGOUT, "accounts/logout/", [], _logoutUrl, "Deauthenticate user");
+			var s1:String = PlatformState.STATE_UNAUTHENTICATED;
+			var s2:String = PlatformState.STATE_AUTHENTICATING;
+			var s3:String = PlatformState.STATE_AUTHENTICATED;
 			
-			addEndpointCall(GATEWAY_JSON, CALL_GET_FEED, "users/self/feed/", [count, minId, maxId], _callUrl, "Get current user's feed.", onPhotos);
-			addEndpointCall(GATEWAY_JSON, CALL_GET_USER, "users/${userID}/", [userId], _callUrl, "Gets a user's info.", onUser);
-			addEndpointCall(GATEWAY_JSON, CALL_USER_SEARCH, "users/search/", [searchQuery], _callUrl, "Search for users.", onUsers);
-			addEndpointCall(GATEWAY_JSON, CALL_GET_SELF, "users/self/", [], _callUrl, "Get current user info.", onUser);
-			addEndpointCall(GATEWAY_JSON, CALL_GET_SELF_RECENT, "users/self/media/recent/", [minId, maxId, minTime, maxTime], _callUrl, "Get current users recent photos.", onPhotos);
-			addEndpointCall(GATEWAY_JSON, CALL_GET_USER_RECENT, "users/${userID}/media/recent/", [userId, minId, maxId, minTime, maxTime], _callUrl, "Get users recent photos.", onPhotos);
-			addEndpointCall(GATEWAY_JSON, CALL_GET_SELF_LIKED, "users/self/media/liked/", [], _callUrl, "See the authenticated user's list of media they've liked.", onPhotos);
+			addCall(GATEWAY_OAUTH, CALL_AUTH, s1, [], _oauthUrl, "Revives session  if possible, otherwise displays login view.", null, {doAuth:true});
+			addEndpointCall(GATEWAY_JSON, CALL_LOGOUT, s3, "accounts/logout/", [], _logoutUrl, "Deauthenticate user", onLogout);
 			
-			addEndpointCall(GATEWAY_JSON, CALL_GET_PHOTO, "media/${photoID}/", [a("photoID", "Photo to retrieve")], _callUrl, "Get a photo's info.", onPhoto);
-			addEndpointCall(GATEWAY_JSON, CALL_PHOTO_SEARCH, "media/search/", [searchQuery], _callUrl, "Search for photos.", onPhotos);
-			addEndpointCall(GATEWAY_JSON, CALL_GET_POPULAR_PHOTOS, "media/popular/", [], _callUrl, "Get popular photos.", onPhotos);
-			addEndpointCall(GATEWAY_JSON, CALL_GET_PHOTO_LIKES, "media/${photoID}/likes", [], _callUrl, "Get users who have liked this media.", onUsers);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_FEED, s3, "users/self/feed/", [count, minId, maxId], _callUrl, "Get current user's feed.", onPhotos);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_USER, s3, "users/${userID}/", [userId], _callUrl, "Gets a user's info.", onUser);
+			addEndpointCall(GATEWAY_JSON, CALL_USER_SEARCH, s3, "users/search/", [searchQuery], _callUrl, "Search for users.", onUsers);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_SELF, s3, "users/self/", [], _callUrl, "Get current user info.", onUser);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_SELF_RECENT, s3, "users/self/media/recent/", [minId, maxId, minTime, maxTime], _callUrl, "Get current users recent photos.", onPhotos);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_USER_RECENT, s3, "users/${userID}/media/recent/", [userId, minId, maxId, minTime, maxTime], _callUrl, "Get users recent photos.", onPhotos);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_SELF_LIKED, s3, "users/self/media/liked/", [], _callUrl, "See the authenticated user's list of media they've liked.", onPhotos);
 			
-			addEndpointCall(GATEWAY_JSON, CALL_GET_LOCATION, "locations/${locID}/", [locationId], _callUrl, "Get location's info.", onLocation);
-			addEndpointCall(GATEWAY_JSON, CALL_GET_LOCATION_RECENT, "locations/${locID}/media/recent/", [locationId, minId, maxId, minTime, maxTime], _callUrl, "Get recent photos from location.", onPhotos);
-			addEndpointCall(GATEWAY_JSON, CALL_LOCATION_SEARCH, "locations/search/", [
+			addEndpointCall(GATEWAY_JSON, CALL_GET_PHOTO, s3, "media/${photoID}/", [a("photoID", "Photo to retrieve")], _callUrl, "Get a photo's info.", onPhoto);
+			addEndpointCall(GATEWAY_JSON, CALL_PHOTO_SEARCH, s3, "media/search/", [searchQuery], _callUrl, "Search for photos.", onPhotos);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_POPULAR_PHOTOS, s3, "media/popular/", [], _callUrl, "Get popular photos.", onPhotos);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_PHOTO_LIKES, s3, "media/${photoID}/likes", [], _callUrl, "Get users who have liked this media.", onUsers);
+			
+			addEndpointCall(GATEWAY_JSON, CALL_GET_LOCATION, s3, "locations/${locID}/", [locationId], _callUrl, "Get location's info.", onLocation);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_LOCATION_RECENT, s3, "locations/${locID}/media/recent/", [locationId, minId, maxId, minTime, maxTime], _callUrl, "Get recent photos from location.", onPhotos);
+			addEndpointCall(GATEWAY_JSON, CALL_LOCATION_SEARCH, s3, "locations/search/", [
 				a("lat", "Latitude of the center search coordinate. If used, lng is required"),
 				a("lng", "Longitude of the center search coordinate. If used, lat is required."),
 				a("distance", "Default is 1000m (distance=1000), max distance is 5000"),
 				a("foursquare_id", "Returns a location mapped off of a foursquare v1 api location id. If used, you are not required to use lat and lng. Note that this method is deprecated; you should use the new foursquare IDs with V2 of their API.")
 			], _callUrl, "Search for locations.", onLocations);
 			
-			addEndpointCall(GATEWAY_JSON, CALL_GET_TAG, "tags/${tagID}/", [tagId], _callUrl, "Get tag's info.", onTag);
-			addEndpointCall(GATEWAY_JSON, CALL_GET_TAG_RECENT, "tags/${tagID}/media/recent/", [tagId, minId, maxId], _callUrl, "Get recent photos from tag.", onPhotos);
-			addEndpointCall(GATEWAY_JSON, CALL_TAG_SEARCH, "tags/search/", [searchQuery], _callUrl, "Search for tags.", onTags);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_TAG, s3, "tags/${tagID}/", [tagId], _callUrl, "Get tag's info.", onTag);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_TAG_RECENT, s3, "tags/${tagID}/media/recent/", [tagId, minId, maxId], _callUrl, "Get recent photos from tag.", onPhotos);
+			addEndpointCall(GATEWAY_JSON, CALL_TAG_SEARCH, s3, "tags/search/", [searchQuery], _callUrl, "Search for tags.", onTags);
 			
-			addEndpointCall(GATEWAY_JSON, CALL_GET_GEOGRAPHIES_RECENT, "geographies/${geoID}/media/recent/", [a("geoID", "Geography to search"), count, minId], _callUrl, "Get recent photos from geography.", onPhotos);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_GEOGRAPHIES_RECENT, s3, "geographies/${geoID}/media/recent/", [a("geoID", "Geography to search"), count, minId], _callUrl, "Get recent photos from geography.", onPhotos);
 		}
 		
 		override public function setProp(name:String, value:*):void{
 			super.setProp(name, value);
 			_oauthUrl.setToken(name, value);
 			_callUrl.setToken(name, value);
-			_logoutUrl.setToken(name, value);
 		}
 		
-		protected function addEndpointCall(gatewayId:String, callId:String, endPoint:String, args:Array, url:IUrlProvider, desc:String = null, resultHandler:Function=null, urlTokens:Object=null, protocol:String=null):void
+		protected function addEndpointCall(gatewayId:String, callId:String, availableState:String, endPoint:String, args:Array, url:IUrlProvider, desc:String = null, resultHandler:Function=null, urlTokens:Object=null, protocol:String=null):void
 		{
 			if(!urlTokens)urlTokens = {};
 			urlTokens[JsonRest.URL_ENDPOINT] = endPoint;
-			addCall(gatewayId, callId, args, _callUrl, desc, resultHandler, urlTokens, protocol);
+			addCall(gatewayId, callId, availableState, args, url, desc, resultHandler, urlTokens, protocol); 
 		}
 		
 		private function onTokenChanged():void
 		{
 			_oauthUrl.setToken(OAuth2.URL_ACCESS_TOKEN, _oauth.accessToken);
 			_callUrl.setToken(OAuth2.URL_ACCESS_TOKEN, _oauth.accessToken);
-			_logoutUrl.setToken(OAuth2.URL_ACCESS_TOKEN, _oauth.accessToken);
 		}
 		
 		private function checkAuthUrl(url:String):Boolean{

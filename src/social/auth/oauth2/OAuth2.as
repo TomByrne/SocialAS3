@@ -1,11 +1,5 @@
 package social.auth.oauth2
 {
-	import flash.display.Stage;
-	import flash.events.ErrorEvent;
-	import flash.events.Event;
-	import flash.media.StageWebView;
-	import flash.net.URLVariables;
-	
 	import org.osflash.signals.Signal;
 	
 	import social.auth.IAuth;
@@ -17,6 +11,7 @@ package social.auth.oauth2
 	public class OAuth2 implements IAuth, IGateway
 	{
 		public static const URL_ACCESS_TOKEN			:String		= "${accessToken}";
+		public static const TOKEN_SEARCHER				:RegExp		= /access_token=([\d\w\.\-_]*)/g;
 		
 		public function get accessTokenChanged():Signal{
 			if(!_accessTokenChanged)_accessTokenChanged = new Signal();
@@ -25,23 +20,23 @@ package social.auth.oauth2
 		
 		private var _urlProvider			:IUrlProvider;
 		
-		private var _responseVar			:String;
+		private var _tokenSearcher			:RegExp;
 		private var _accessToken			:String;
 		private var _accessTokenChanged		:Signal;
 		
 		private var _webView				:IWebView;
 		
-		private var _urlScopeChecker:Function;
+		private var _urlScopeChecker		:Function;
 		
-		private var _pendingAuth:Boolean;
-		private var _onCompletes:Array;
-		private var _tokenTested:Boolean;
+		private var _pendingAuth			:Boolean;
+		private var _onCompletes			:Array;
+		private var _tokenTested			:Boolean;
 		
 		
-		public function OAuth2(urlScopeChecker:Function, responseVar:String)
+		public function OAuth2(urlScopeChecker:Function, tokenSearcher:RegExp=null)
 		{
 			_urlScopeChecker = urlScopeChecker;
-			_responseVar = responseVar;
+			_tokenSearcher = tokenSearcher || TOKEN_SEARCHER;
 			_onCompletes = [];
 		}
 		public function setWebView(webView:IWebView):void{
@@ -57,20 +52,20 @@ package social.auth.oauth2
 			_urlProvider = urlProvider;
 			_urlProvider.urlChanged.add(onUrlChanged);
 			
-			authenticate();
+			authenticate(args.showImmediately!=false);
 			
 		}
 		
 		private function onUrlChanged():void
 		{
-			authenticate(); 
+			authenticate(false); 
 		}
 		
 		/**
 		 * 
 		 * 
 		 */		
-		private function authenticate():void
+		private function authenticate(showImmediately:Boolean):void
 		{
 			if(!_webView || !_urlProvider || _pendingAuth)return;
 			
@@ -80,7 +75,8 @@ package social.auth.oauth2
 			_pendingAuth = true;
 			
 			_webView.loadComplete.add(onLoadComplete);
-			_webView.showView(url);
+			_webView.locationChanged.add(onLocationChanged);
+			_webView.showView(url, showImmediately);
 		}
 		public function cancelAuth():void
 		{
@@ -93,7 +89,7 @@ package social.auth.oauth2
 			callComplete(null, true);
 		}
 		
-		private function callComplete(success:Object, fail:Boolean):void
+		private function callComplete(success:*, fail:*):void
 		{
 			if(_onCompletes.length){
 				for each(var onComplete:Function in _onCompletes){
@@ -105,33 +101,43 @@ package social.auth.oauth2
 		
 		private function onLoadComplete( success:*, fail:Boolean):void
 		{
-			_webView.loadComplete.remove(onLoadComplete);
 			if(success){
-				var location:String = _webView.location;
-				var newToken:String;
-				if(location.indexOf("?")!=-1 && location.indexOf(_responseVar)!=-1){
-					var urlVars:URLVariables = new URLVariables(location);
-					newToken = urlVars[_responseVar];
-				}
-				if ( newToken )
-				{
-					_tokenTested = true;
-					_accessToken = newToken;
-					if(_accessTokenChanged)_accessTokenChanged.dispatch();
-					cleanupAuth();
-					callComplete(true, null);
-				}
-				else if(_urlScopeChecker==null || !_urlScopeChecker(location))
-				{
-					cancelAuth();
-				}
+				checkLocation();
 			}else{
+				cancelAuth();
+			}
+		}
+		
+		private function onLocationChanged():void
+		{
+			checkLocation();
+		}
+		
+		private function checkLocation():void
+		{
+			var location:String = _webView.location;
+			var newToken:String;
+			var res:Object = _tokenSearcher.exec(location);
+			if(res){
+				newToken = res[1];
+			}
+			if ( newToken )
+			{
+				_tokenTested = true;
+				_accessToken = newToken;
+				if(_accessTokenChanged)_accessTokenChanged.dispatch();
+				cleanupAuth();
+				callComplete(true, null);
+			}
+			else if(_urlScopeChecker==null || !_urlScopeChecker(location))
+			{
 				cancelAuth();
 			}
 		}
 		
 		private function cleanupAuth():void
 		{
+			_webView.loadComplete.remove(onLoadComplete);
 			_pendingAuth = false;
 			_webView.hideView();
 		}
