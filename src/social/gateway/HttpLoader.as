@@ -1,24 +1,48 @@
-package social.gateway.jsonRest
+package social.gateway
 {
+	import flash.display.Loader;
+	import flash.display.LoaderInfo;
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLLoaderDataFormat;
 	import flash.net.URLRequest;
 	import flash.net.URLVariables;
+	import flash.utils.ByteArray;
 	
 	import social.auth.IAuth;
 	import social.core.IUrlProvider;
-	import social.gateway.IGateway;
 	import social.util.closure;
 	import social.web.IWebView;
 
-	public class JsonRest implements IGateway
+	public class HttpLoader implements IGateway
 	{
-		public static const PROTOCOL_GET:String = "GET";
-		public static const PROTOCOL_POST:String = "POST";
+		public static const PROTOCOL_GET		:String = "GET";
+		public static const PROTOCOL_POST		:String = "POST";
 		
-		public static const URL_ENDPOINT				:String		= "${endPoint}";
+		public static const URL_ENDPOINT		:String		= "${endPoint}";
+		
+		public static function loaderHandler(success:ByteArray, fail:*, onComplete:Function):void
+		{
+			if(success){
+				var loader:Loader = new Loader();
+				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, closure(onLoaderComplete, [onComplete], true));
+				loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, closure(onLoaderComplete, [onComplete], true));
+				loader.loadBytes(success);
+			}else{
+				if(onComplete)onComplete(null, fail);
+			}
+		}
+		
+		private static function onLoaderComplete(e:Event, onComplete:Function):void
+		{
+			if(e is IOErrorEvent){
+				if(onComplete)onComplete(null, true);
+			}else{
+				var loader:Loader = (e.target as LoaderInfo).loader;
+				if(onComplete)onComplete(loader.content, null);
+			}
+		}
 		
 		public static function createParser(klass:Class, childParsers:Object = null, propMapper:Object=null):Function
 		{
@@ -132,11 +156,13 @@ package social.gateway.jsonRest
 		
 		private var _oauth:IAuth;
 		private var _defaultProtocol:String;
+		private var _dataFormat:String;
 		
-		public function JsonRest(oauth:IAuth=null, defaultProtocol:String = PROTOCOL_GET)
+		public function HttpLoader(oauth:IAuth=null, dataFormat:String=URLLoaderDataFormat.TEXT, defaultProtocol:String = PROTOCOL_GET)
 		{
 			this.oauth = oauth;
 			_defaultProtocol = defaultProtocol;
+			_dataFormat = dataFormat;
 		}
 		
 		public function setWebView(webView:IWebView):void{
@@ -195,15 +221,15 @@ package social.gateway.jsonRest
 					}
 				}
 				
-				urlVars.oauth_token = _oauth.accessToken;
+				//urlVars.oauth_token = _oauth.accessToken;
 				
 				request	= new URLRequest( urlProvider.url );
 				request.data = urlVars;
-				
-				loader.dataFormat = URLLoaderDataFormat.TEXT;	
+					
 			}
+			loader.dataFormat = _dataFormat;
 			request.method = protocol;
-			trace( protocol + " - request: " + request.url );
+			trace( protocol +" - "+loader.dataFormat+ " - request: " + request.url );
 			
 			loader.load( request );
 		}

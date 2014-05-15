@@ -160,10 +160,10 @@ package social.core
 				}
 			}
 			
-			var gateway:IGateway = _gateways[callDesc.gatewayId];
 			if(callDesc.resultHandler!=null){
 				onComplete = closure(callDesc.resultHandler, [onComplete], true);
 			}
+			var gateway:IGateway = _gateways[callDesc.gatewayId];
 			gateway.doRequest(callDesc.url, argVals, callDesc.protocol, onComplete);
 		}
 		

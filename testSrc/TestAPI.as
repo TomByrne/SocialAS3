@@ -10,6 +10,7 @@ package
 	import com.bit101.components.TextArea;
 	import com.bit101.components.VBox;
 	
+	import flash.display.DisplayObject;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.geom.Rectangle;
@@ -233,13 +234,18 @@ package
 					if(done[value])continue;
 					ret += "\n"+tabs+" "+i+" = "+stringify(value, tabs+"\t", done);
 				}
+				var goDeep:Boolean = !(obj is DisplayObject);
+				
 				var description:XML = describeType(obj);
 				for each (var a:XML in description.*.((localName()=="variable" || localName()=="accessor") && (!attribute("access").length() || @access.toString()!="writeonly"))){
 					i = a.@name;
-					value = obj[i];
-					if(done[value])continue;
-					ret += "\n"+tabs+" "+i+" = "+stringify(value, tabs+"\t", done);
+					try{
+						value = obj[i];
+						if(done[value])continue;
+						ret += "\n"+tabs+" "+i+" = "+(goDeep?stringify(value, tabs+"\t", done):value.toString());
+					}catch(e:Error){}
 				}
+				
 				return ret;
 			}else{
 				return String(obj);

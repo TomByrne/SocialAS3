@@ -6,7 +6,7 @@ package social.instagram
 	import social.core.PlatformState;
 	import social.core.UrlProvider;
 	import social.desc.ArgDesc;
-	import social.gateway.jsonRest.JsonRest;
+	import social.gateway.HttpLoader;
 	import social.instagram.vo.Location;
 	import social.instagram.vo.Photo;
 	import social.instagram.vo.PhotoSize;
@@ -50,44 +50,44 @@ package social.instagram
 		public static const CALL_GET_GEOGRAPHIES_RECENT	:String		= "getGeographiesRecent";
 		
 		protected static const AUTH_URL:String = "https://api.instagram.com/oauth/authorize/?client_id="+URL_CLIENT_ID+"&redirect_uri="+URL_REDIRECT_URL+"&response_type=token&scope="+URL_PERMISSIONS;
-		protected static const API_URL:String = "https://api.instagram.com/v1/"+JsonRest.URL_ENDPOINT+"?access_token="+OAuth2.URL_ACCESS_TOKEN;
-		protected static const LOGOUT_URL:String = "https://instagram.com/"+JsonRest.URL_ENDPOINT;
+		protected static const API_URL:String = "https://api.instagram.com/v1/"+HttpLoader.URL_ENDPOINT+"?access_token="+OAuth2.URL_ACCESS_TOKEN;
+		protected static const LOGOUT_URL:String = "https://instagram.com/"+HttpLoader.URL_ENDPOINT;
 		
 		private var _oauthUrl:UrlProvider;
 		private var _callUrl:UrlProvider;
 		private var _logoutUrl:UrlProvider;
 		
 		private var _oauth:OAuth2;
-		private var _jsonRest:JsonRest;
+		private var _jsonRest:HttpLoader;
 		private var _webView:StageWebViewProxy;
 		
 		public function InstagramPlatform(){
 			
-			var parseUser:Function = JsonRest.createParser(User, null,
+			var parseUser:Function = HttpLoader.createParser(User, null,
 				{"id":"id", "profile_picture":"photo", "full_name":"fullName", "username":"userName"});
 			
-			var parsePhotoSize:Function = JsonRest.createParser(PhotoSize, null,
+			var parsePhotoSize:Function = HttpLoader.createParser(PhotoSize, null,
 				{"url":"url", "width":"width", "height":"height"});
-			var parsePhotoSizes:Function = JsonRest.createArrParser(parsePhotoSize);
+			var parsePhotoSizes:Function = HttpLoader.createArrParser(parsePhotoSize);
 			
-			var parseLocation:Function = JsonRest.createParser(Location, null,
+			var parseLocation:Function = HttpLoader.createParser(Location, null,
 				{"id":"id", "longitude":"longitude", "latitude":"latitude", "name":"name"});
 			
-			var parseTag:Function = JsonRest.createParser(Tag, null,
+			var parseTag:Function = HttpLoader.createParser(Tag, null,
 				{"name":"name", "media_count":"count"});
-			var parseTags:Function = JsonRest.createArrParser(parseTag);
+			var parseTags:Function = HttpLoader.createArrParser(parseTag);
 			
-			var parsePhoto:Function = JsonRest.createParser(Photo, {"images":parsePhotoSizes, "user":parseUser, "location":parseLocation},
+			var parsePhoto:Function = HttpLoader.createParser(Photo, {"images":parsePhotoSizes, "user":parseUser, "location":parseLocation},
 				{"id":"id", "type":"type", "images":"sizes", "created_time":"creation", "likes":"likes", "user":"user", "location":"location", "tags":"tags"});
 			
-			var onUser:Function = JsonRest.createHandler(parseUser, "data");
-			var onUsers:Function = JsonRest.createHandler(JsonRest.createArrParser(parseUser), "data");
-			var onPhoto:Function = JsonRest.createHandler(parsePhoto, "data");
-			var onPhotos:Function = JsonRest.createHandler(JsonRest.createArrParser(parsePhoto), "data");
-			var onLocation:Function = JsonRest.createHandler(parseLocation, "data");
-			var onLocations:Function = JsonRest.createHandler(JsonRest.createArrParser(parseLocation), "data");
-			var onTag:Function = JsonRest.createHandler(parseTag, "data");
-			var onTags:Function = JsonRest.createHandler(parseTags, "data");
+			var onUser:Function = HttpLoader.createHandler(parseUser, "data");
+			var onUsers:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseUser), "data");
+			var onPhoto:Function = HttpLoader.createHandler(parsePhoto, "data");
+			var onPhotos:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parsePhoto), "data");
+			var onLocation:Function = HttpLoader.createHandler(parseLocation, "data");
+			var onLocations:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseLocation), "data");
+			var onTag:Function = HttpLoader.createHandler(parseTag, "data");
+			var onTags:Function = HttpLoader.createHandler(parseTags, "data");
 			
 			
 			_oauthUrl = new UrlProvider(true, AUTH_URL);
@@ -104,7 +104,7 @@ package social.instagram
 			
 			addGateway(GATEWAY_OAUTH, _oauth);
 			
-			_jsonRest = new JsonRest(_oauth);
+			_jsonRest = new HttpLoader(_oauth);
 			addGateway(GATEWAY_JSON, _jsonRest);
 			
 			addProp(URL_CLIENT_ID, "Instagram application client ID", false);
@@ -165,7 +165,7 @@ package social.instagram
 		protected function addEndpointCall(gatewayId:String, callId:String, availableState:String, endPoint:String, args:Array, url:IUrlProvider, desc:String = null, resultHandler:Function=null, urlTokens:Object=null, protocol:String=null):void
 		{
 			if(!urlTokens)urlTokens = {};
-			urlTokens[JsonRest.URL_ENDPOINT] = endPoint;
+			urlTokens[HttpLoader.URL_ENDPOINT] = endPoint;
 			addCall(gatewayId, callId, availableState, args, url, desc, resultHandler, urlTokens, protocol); 
 		}
 		
