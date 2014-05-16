@@ -86,6 +86,7 @@ package social.web
 		}
 		public function hideView():void{
 			_webView.stage = null;
+			_pendingShow = false;
 			_ignoreChanges = true;
 			_webView.loadString("<html></html>"); // clears the view for reuse
 			_ignoreChanges = false;

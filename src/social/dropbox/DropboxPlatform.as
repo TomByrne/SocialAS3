@@ -139,7 +139,7 @@ package social.dropbox
 			
 			var argRoot:ArgDesc = a("root", "Root file structure - Shold be 'dropbox', 'sandbox', or 'auto'", false, "dropbox" );
 			var argFilePath:ArgDesc = a("filePath", "File concerned", true, "" );
-			var argIncMediaInf:ArgDesc = a("include_media_info", "If true, each file will include a photo_info dictionary for photos and a video_info dictionary for videos with additional media info.", true, true );
+			var argIncMediaInf:ArgDesc = a("include_media_info", "If true, each file will include a photo_info dictionary for photos and a video_info dictionary for videos with additional media info.", true );
 			addEndpointCall(GATEWAY_IMAGE, CALL_GET_FILE, s3, "files/${root}/${filePath}", [argRoot, argFilePath], _contentUrl, "Downloads a file.", HttpLoader.loaderHandler);
 			//addEndpointCall(GATEWAY_JSON, CALL_PUT_FILE, s3, "files_put/${root}/${filePath}", [argRoot, argFilePath], _contentUrl, "Uploads a file.", onUser, null, JsonRest.PROTOCOL_POST);
 			addEndpointCall(GATEWAY_JSON, CALL_GET_METADATA, s3, "metadata/${root}/${filePath}", [

@@ -7,5 +7,6 @@ package social.gateway
 	{
 		function setWebView( webView:IWebView ):void;
 		function doRequest( urlProvider:IUrlProvider, args:Object, protocol:String, onComplete:Function=null ):void;
+		function buildUrl( urlProvider:IUrlProvider, args:Object, protocol:String ):String;
 	}
 }

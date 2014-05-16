@@ -30,17 +30,17 @@ package social.gateway
 				loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, closure(onLoaderComplete, [onComplete], true));
 				loader.loadBytes(success);
 			}else{
-				if(onComplete)onComplete(null, fail);
+				if(onComplete!=null)onComplete(null, fail);
 			}
 		}
 		
 		private static function onLoaderComplete(e:Event, onComplete:Function):void
 		{
 			if(e is IOErrorEvent){
-				if(onComplete)onComplete(null, true);
+				if(onComplete!=null)onComplete(null, true);
 			}else{
 				var loader:Loader = (e.target as LoaderInfo).loader;
-				if(onComplete)onComplete(loader.content, null);
+				if(onComplete!=null)onComplete(loader.content, null);
 			}
 		}
 		
@@ -128,15 +128,21 @@ package social.gateway
 				return ret;
 			}
 		}
-		public static function createHandler(parser:Function, dataProp:String=null):Function
+		public static function createHandler(parser:Function=null, dataProp:String=null):Function
 		{
 			return function(success:String, fail:*, onComplete:Function):void{
 				if(fail){
 					if(onComplete!=null)onComplete(null, fail || true);
 				}else{
-					var data:* = JSON.parse( success );
+					try{
+						var data:* = JSON.parse( success );
+					}catch(e:Error){}
+					if(data==null){
+						onComplete( null, "JSON parsing error");
+						return;
+					}
 					if(dataProp)data = data[dataProp];
-					var res:* = parser( data );
+					var res:* = parser!=null?parser( data ):data;
 					if(onComplete!=null){
 						onComplete( res || true, null);
 					}
@@ -167,6 +173,36 @@ package social.gateway
 		
 		public function setWebView(webView:IWebView):void{
 			// ignore
+		}
+		
+		public function buildUrl( urlProvider:IUrlProvider, args:Object, protocol:String ):String{
+			var url:String = urlProvider.url;
+			for ( var prop:* in args )
+			{
+				var val:* = args[prop]; 
+				var token:String = "${"+prop+"}";
+				if(url.indexOf(token)!=-1){
+					url = url.replace(token, val);
+					val = null;
+				}
+				if(val==null || val==-1 || (typeof(val)=="number" && isNaN(val))){
+					delete args[prop];
+				}
+			}
+			
+			if(!protocol)protocol = _defaultProtocol;
+			var params:String = "";
+			if (protocol == "GET" )
+			{
+				if ( args )
+				{
+					for ( prop in args )
+					{
+						params += "&"+prop+"="+args[prop]; 
+					}
+				}
+			}
+			return url + params;
 		}
 		
 		public function doRequest( urlProvider:IUrlProvider, args:Object, protocol:String, onComplete:Function=null ):void

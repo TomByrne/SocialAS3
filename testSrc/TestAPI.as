@@ -23,6 +23,7 @@ package
 	import social.desc.ArgDesc;
 	import social.desc.CallDesc;
 	import social.dropbox.DropboxPlatform;
+	import social.fb.FacebookPlatform;
 	import social.instagram.InstagramPlatform;
 	import social.util.closure;
 	import social.web.StageWebViewProxy;
@@ -76,9 +77,14 @@ package
 			
 			_callCont = new VBox(_mainCont, 0, 30);
 			
+			var facebook:FacebookPlatform	= new FacebookPlatform();
+			facebook.setProp(FacebookPlatform.URL_CLIENT_ID, "262050547226244");
+			facebook.setProp(FacebookPlatform.URL_REDIRECT_URL, "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
+			addPlatform(facebook);
+			
 			var dropbox:DropboxPlatform	= new DropboxPlatform();
-			dropbox.setProp(InstagramPlatform.URL_CLIENT_ID, "56je6nzxitw1avr");
-			dropbox.setProp(InstagramPlatform.URL_REDIRECT_URL, "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
+			dropbox.setProp(DropboxPlatform.URL_CLIENT_ID, "56je6nzxitw1avr");
+			dropbox.setProp(DropboxPlatform.URL_REDIRECT_URL, "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
 			addPlatform(dropbox);
 			
 			var instagram:InstagramPlatform	= new InstagramPlatform();

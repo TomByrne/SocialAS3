@@ -27,9 +27,9 @@ package social.util
 			format = format.replace("%t", "\\t");
 			format = format.replace("%%", "!@#$!@#$");
 			format = format.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-			format = format.replace(/%(\w)/g, "(?P<$1>[+\\d\\w]+)");
+			format = format.replace(/%(\w)/g, "(?P<$1>[ +\\d\\w]+)");
 			format = format.replace("!@#$!@#$", "%");
-			return new RegExp(format, "g");
+			return new RegExp(format, "");
 		}
 		private static function parseReg(format:RegExp, dateStr:String, adjustTimezone:Boolean):Date
 		{

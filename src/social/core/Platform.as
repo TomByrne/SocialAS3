@@ -141,6 +141,20 @@ package social.core
 				if(onComplete!=null)onComplete(true, null);
 			}
 		}
+		public function doMultiCall(calls:Array, onComplete:Function=null):void
+		{
+			var finished:int = 0;
+			var results:Array = [];
+			var onCompleteHandler:Function = function(success:*, fail:*, index:int):void{
+				++finished;
+				results[index] = {success:success, fail:fail};
+				if(finished==calls.length && onComplete!=null)onComplete(results);
+			}
+			for(var i:int=0; i<calls.length; ++i){
+				var callObj:Object = calls[i];
+				doCall(callObj.id, callObj.args, closure(onCompleteHandler, [i], true));
+			}
+		}
 		public function doCall(callId:String, argVals:Object, onComplete:Function=null):void
 		{
 			for each(var prop:PropDesc in _props){
@@ -165,6 +179,27 @@ package social.core
 			}
 			var gateway:IGateway = _gateways[callDesc.gatewayId];
 			gateway.doRequest(callDesc.url, argVals, callDesc.protocol, onComplete);
+		}
+		public function getCallUrl(callId:String, argVals:Object):String
+		{
+			for each(var prop:PropDesc in _props){
+				if(!prop.optional && (prop.value || prop.defaultValue)==null){
+					throw new Error("Property "+prop.name+" must be set before calls can be made.");
+				}
+			}
+			
+			var callDesc:CallDesc = _calls[callId];
+			for each(var arg:ArgDesc in callDesc.args){
+				if(!argVals.hasOwnProperty(arg.name)){
+					if(!arg.optional){
+						throw new Error("Argument "+arg.name+" must be provided.");
+					}else{
+						argVals[arg.name] = arg.def;
+					}
+				}
+			}
+			var gateway:IGateway = _gateways[callDesc.gatewayId];
+			return gateway.buildUrl(callDesc.url, argVals, callDesc.protocol);
 		}
 		
 		private function onTokenChanged():void

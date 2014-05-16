@@ -42,6 +42,9 @@ package social.auth.oauth2
 		public function setWebView(webView:IWebView):void{
 			_webView = webView;
 		}
+		public function buildUrl( urlProvider:IUrlProvider, args:Object, protocol:String ):String{
+			return urlProvider.url;
+		}
 		public function doRequest( urlProvider:IUrlProvider, args:Object, protocol:String, onComplete:Function=null ):void
 		{
 			if(onComplete!=null)_onCompletes.push(onComplete);
@@ -115,6 +118,8 @@ package social.auth.oauth2
 		
 		private function checkLocation():void
 		{
+			if(!_pendingAuth)return;
+			
 			var location:String = _webView.location;
 			var newToken:String;
 			var res:Object = _tokenSearcher.exec(location);
