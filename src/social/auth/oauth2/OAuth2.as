@@ -11,7 +11,7 @@ package social.auth.oauth2
 	public class OAuth2 implements IAuth, IGateway
 	{
 		public static const URL_ACCESS_TOKEN			:String		= "${accessToken}";
-		public static const TOKEN_SEARCHER				:RegExp		= /access_token=([\d\w\.\-_]*)/g;
+		public static const TOKEN_SEARCHER				:RegExp		= /access_token=([\d\w\.\-_]*)/;
 		
 		public function get accessTokenChanged():Signal{
 			if(!_accessTokenChanged)_accessTokenChanged = new Signal();

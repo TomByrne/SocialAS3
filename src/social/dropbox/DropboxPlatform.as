@@ -115,7 +115,7 @@ package social.dropbox
 			_callUrl = new UrlProvider(true, API_URL);
 			_contentUrl = new UrlProvider(true, CONTENT_URL);
 			
-			_oauth = new OAuth2(checkAuthUrl, /access_token=([\d\w\.]*)/g);
+			_oauth = new OAuth2(checkAuthUrl);
 			_oauth.accessTokenChanged.add(onTokenChanged);
 			super("Dropbox_v1", _oauth);
 			
