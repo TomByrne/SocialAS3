@@ -86,7 +86,7 @@ package social.core
 		private function rebuildUrl():void
 		{
 			var newUrl:String;
-			if(_isReady){
+			if(_isReady && _urlPattern){
 				newUrl = _urlPattern;
 				
 				var prop:String;
@@ -99,6 +99,11 @@ package social.core
 				for(prop in _values){
 					str = _values[prop];
 					newUrl = newUrl.replace(prop, str);
+				}
+				var firstQ:int = newUrl.indexOf("?");
+				var lastQ:int;
+				while((lastQ = newUrl.lastIndexOf("?"))!=firstQ){
+					newUrl = newUrl.substr(0, lastQ)+"&"+newUrl.substr(lastQ+1);
 				}
 			}
 			if(_url!=newUrl){

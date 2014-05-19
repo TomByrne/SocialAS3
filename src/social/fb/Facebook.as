@@ -71,6 +71,14 @@ package social.fb
 			_platform.doCall(FacebookPlatform.CALL_ALBUMS, {}, onComplete);
 		}
 		
+		public function getPicture( size:String=null, width:int = -1, height:int = -1, onComplete:Function=null):void{
+			_platform.doCall(FacebookPlatform.CALL_PICTURE, {"size":size, "width":width, "height":height}, onComplete);
+		}
+		
+		public function getPictureInfo( size:String=null, width:int = -1, height:int = -1, onComplete:Function=null):void{
+			_platform.doCall(FacebookPlatform.CALL_PICTURE_INFO, {"size":size, "width":width, "height":height}, onComplete);
+		}
+		
 		public function getAlbum( albumId:String, onComplete:Function=null):void{
 			_platform.doCall(FacebookPlatform.CALL_ALBUM, {objectId:albumId}, onComplete);
 		}
@@ -87,11 +95,29 @@ package social.fb
 			_platform.doCall(FacebookPlatform.CALL_USER_ALBUMS, {userId:userId}, onComplete);
 		}
 		
+		public function getUserPicture( userId:String, size:String=null, width:int = -1, height:int = -1, onComplete:Function=null):void{
+			_platform.doCall(FacebookPlatform.CALL_USER_PICTURE, {userId:userId, "size":size, "width":width, "height":height}, onComplete);
+		}
+		
+		public function getUserPictureInfo( userId:String, size:String=null, width:int = -1, height:int = -1, onComplete:Function=null):void{
+			_platform.doCall(FacebookPlatform.CALL_USER_PICTURE_INFO, {userId:userId, "size":size, "width":width, "height":height}, onComplete);
+		}
+		
 		public function fql( fql:String, onComplete:Function=null):void{
 			_platform.doCall(FacebookPlatform.CALL_FQL, {q:fql}, onComplete);
 		}
 		public function fqlMulti( fql:FqlMultiQuery, onComplete:Function=null):void{
 			_platform.doCall(FacebookPlatform.CALL_FQL_MULTI, {q:fql.toString()}, onComplete);
+		}
+		
+		// URL generators
+		
+		public function getPictureUrl( size:String=null, width:int = -1, height:int = -1):String{
+			return _platform.getCallUrl(FacebookPlatform.CALL_PICTURE, {"size":size, "width":width, "height":height});
+		}
+		
+		public function getUserPictureUrl( userId:String, size:String=null, width:int = -1, height:int = -1):String{
+			return _platform.getCallUrl(FacebookPlatform.CALL_USER_PICTURE, {userId:userId, "size":size, "width":width, "height":height});
 		}
 	}
 }

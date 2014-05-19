@@ -53,6 +53,11 @@ package social.core
 				for(var prop:String in _values){
 					_url = _url.replace(prop, _values[prop]);
 				}
+				var firstQ:int = _url.indexOf("?");
+				var lastQ:int;
+				while((lastQ = _url.lastIndexOf("?"))!=firstQ){
+					_url = _url.substr(0, lastQ)+"&"+_url.substr(lastQ+1);
+				}
 			}
 			return _url;
 		}

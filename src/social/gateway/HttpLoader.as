@@ -257,8 +257,6 @@ package social.gateway
 					}
 				}
 				
-				//urlVars.oauth_token = _oauth.accessToken;
-				
 				request	= new URLRequest( urlProvider.url );
 				request.data = urlVars;
 					

@@ -11,6 +11,7 @@ package social.fb
 	import social.fb.vo.Album;
 	import social.fb.vo.Image;
 	import social.fb.vo.Photo;
+	import social.fb.vo.ProfilePicture;
 	import social.fb.vo.User;
 	import social.gateway.HttpLoader;
 	import social.util.DateParser;
@@ -38,8 +39,12 @@ package social.fb
 		public static const CALL_ALBUMS					:String		= "albums";
 		public static const CALL_ALBUM_PICTURE			:String		= "albumPicture";
 		public static const CALL_ALBUM_PHOTOS			:String		= "albumPhotos";
+		public static const CALL_PICTURE				:String		= "picture";
+		public static const CALL_PICTURE_INFO			:String		= "pictureInfo";
 		
 		public static const CALL_USER_ALBUMS			:String		= "userAlbums";
+		public static const CALL_USER_PICTURE			:String		= "userPicture";
+		public static const CALL_USER_PICTURE_INFO		:String		= "userPictureInfo";
 		
 		public static const CALL_SELF					:String		= "self";
 		public static const CALL_FRIENDS				:String		= "friends";
@@ -78,6 +83,8 @@ package social.fb
 					"from":"from", "icon":"icon", "images":"imagesArr", "link":"link", "name":"name",
 					"picture":"picture", "source":"source", "updated_time":"updatedTime"});
 			
+			var parseProfPic:Function = HttpLoader.createParser(ProfilePicture, null,{"url":"url", "width":"width", "height":"height", "is_silhouette":"isSilhouette"});
+			
 			var onUser:Function = HttpLoader.createHandler(parseUser);
 			var onUsers:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseUser), "data");
 			
@@ -86,6 +93,8 @@ package social.fb
 			
 			var onPhoto:Function = HttpLoader.createHandler(parsePhoto);
 			var onPhotos:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parsePhoto), "data");
+			
+			var onProfPic:Function = HttpLoader.createHandler(parseProfPic, "data");
 			
 			
 			_oauthUrl = new UrlProvider(true, AUTH_URL);
@@ -109,14 +118,9 @@ package social.fb
 			
 			var userId:ArgDesc 			= a("userId", "Relevant user");
 			var objectId:ArgDesc 		= a("objectId", "Object to retrieve");
-			/*var locationId:ArgDesc 	= a("locID", "Location to retrieve");
-			var tagId:ArgDesc 			= a("tagID", "Tag to retrieve");
-			var searchQuery:ArgDesc 	= a("q", "Search query");
-			var minId:ArgDesc 			= a("min_id", "Return media later than this min_id", true);
-			var maxId:ArgDesc 			= a("max_id", "Return media earlier than this max_id", true);
-			var minTime:ArgDesc 		= a("min_timestamp", "Return media after this UNIX timestamp", true);
-			var maxTime:ArgDesc 		= a("max_timestamp", "Return media before this UNIX timestamp", true);
-			var count:ArgDesc 			= a("count", "Count of media to return", true);*/
+			var picType:ArgDesc 		= a("type", "Get a pre-specified size of picture", true);
+			var picHeight:ArgDesc 		= a("height", "Restrict the picture height to this size in pixels.", true);
+			var picWidth:ArgDesc 		= a("width", "Restrict the picture width to this size in pixels. When height and width are both used, the image will be scaled as close to the dimensions as possible and then cropped down.", true);
 			
 			var s1:String = PlatformState.STATE_UNAUTHENTICATED;
 			var s2:String = PlatformState.STATE_AUTHENTICATING;
@@ -132,8 +136,12 @@ package social.fb
 			addEndpointCall(GATEWAY_JSON, CALL_ALBUM, s3, URL_OBJECT_ID, [objectId], _callUrl, "Get a photo album.", onAlbum);
 			addEndpointCall(GATEWAY_IMAGE, CALL_ALBUM_PICTURE, s3, URL_OBJECT_ID+"/picture", [objectId], _callUrl, "The cover photo of this album.", HttpLoader.loaderHandler);
 			addEndpointCall(GATEWAY_JSON, CALL_ALBUM_PHOTOS, s3, URL_OBJECT_ID+"/photos", [objectId], _callUrl, "Photos contained in this album.", onPhotos);
+			addEndpointCall(GATEWAY_IMAGE, CALL_PICTURE, s3, "me/picture", [picType, picWidth, picHeight], _callUrl, "Get profile picture.", HttpLoader.loaderHandler);
+			addEndpointCall(GATEWAY_JSON, CALL_PICTURE_INFO, s3, "me/picture?redirect=false", [picType, picWidth, picHeight], _callUrl, "Get profile picture information.", onProfPic);
 			
 			addEndpointCall(GATEWAY_JSON, CALL_USER_ALBUMS, s3, URL_USER_ID+"/albums", [userId], _callUrl, "Get a user's photo albums.", onAlbums);
+			addEndpointCall(GATEWAY_IMAGE, CALL_USER_PICTURE, s3, URL_USER_ID+"/picture", [userId, picType, picWidth, picHeight], _callUrl, "Get a user's profile picture.", HttpLoader.loaderHandler);
+			addEndpointCall(GATEWAY_JSON, CALL_USER_PICTURE_INFO, s3, URL_USER_ID+"/picture?redirect=false", [userId, picType, picWidth, picHeight], _callUrl, "Get a user's profile picture information.", onProfPic);
 			
 			
 			
