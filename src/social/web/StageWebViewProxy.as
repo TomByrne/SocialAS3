@@ -19,9 +19,13 @@ package social.web
 			if(!_locationChanged)_locationChanged = new Signal();
 			return _locationChanged;
 		}
+		public function get isLoadingChanged():Signal{
+			if(!_isLoadingChanged)_isLoadingChanged = new Signal();
+			return _isLoadingChanged;
+		}
 		
 		public function get location():String{
-			return _webView.location;
+			return _location || _webView.location;
 		}
 		
 		public function get viewPort():Rectangle{
@@ -36,15 +40,24 @@ package social.web
 		}
 		public function set stage(value:Stage):void{
 			_stage = value;
-			if(_webView.stage)_webView.stage = value;
+			if(_webView.stage || (_isRequested || !_isLoading))_webView.stage = value;
+		}
+		
+		public function get isLoading():Boolean{
+			return _isLoading;
 		}
 		
 		private var _stage:Stage;
 		private var _webView:StageWebView;
+		private var _isLoading:Boolean;
+		private var _ignoreChanges:Boolean;
+		private var _isRequested:Boolean;
+		private var _location:String;
+		
 		private var _loadComplete:Signal;
 		private var _locationChanged:Signal;
-		private var _pendingShow:Boolean;
-		private var _ignoreChanges:Boolean;
+		private var _isLoadingChanged:Signal;
+		private var _lastEvent:LocationChangeEvent;
 		
 		public function StageWebViewProxy(stage:Stage=null, viewPort:Rectangle=null){
 			_stage = stage;
@@ -53,43 +66,62 @@ package social.web
 			
 			_webView.addEventListener( Event.COMPLETE, onLoadSuccess );
 			_webView.addEventListener(ErrorEvent.ERROR, onLoadError);
-			_webView.addEventListener(LocationChangeEvent.LOCATION_CHANGE, onLocationChange);
+			_webView.addEventListener(LocationChangeEvent.LOCATION_CHANGING, onLocationChange);
 		}
 		
 		protected function onLocationChange(event:LocationChangeEvent):void
 		{
 			if(_ignoreChanges)return;
-			
-			if(_locationChanged)_locationChanged.dispatch();
+			_lastEvent = event;
+			_location = event.location;
+			if(_locationChanged)_locationChanged.dispatch(cancelLocationChange);
 		}
 		
 		protected function onLoadError(event:ErrorEvent):void{
-			if(_ignoreChanges)return;
+			_location = null;
+			if(_ignoreChanges || !_isRequested)return;
 			
 			_loadComplete.dispatch(null, true);
 		}
 		
 		protected function onLoadSuccess(event:Event):void{
-			if(_ignoreChanges)return;
-			
-			if(_pendingShow){
-				_pendingShow = false;
-				_webView.stage = _stage;
-			}
+			_location = null;
+			if(_ignoreChanges || !_isRequested)return;
+			if(_isLoading)_webView.stage = stage;
+			setIsLoading(false);
 			_loadComplete.dispatch(true, null);
 		}
 		
 		public function showView(url:String, showImmediately:Boolean):void{
+			_location = null;
+			_isRequested = true;
+			setIsLoading(true);			
 			_webView.loadURL(url);
 			if(showImmediately)_webView.stage = _stage;
-			else _pendingShow = true;
 		}
 		public function hideView():void{
+			_location = null;
+			_isRequested = false;
 			_webView.stage = null;
-			_pendingShow = false;
+			setIsLoading(false);
 			_ignoreChanges = true;
 			_webView.loadString("<html></html>"); // clears the view for reuse
 			_ignoreChanges = false;
+		}
+		
+		private function setIsLoading(value:Boolean):void
+		{
+			if(_isLoading!=value){
+				_isLoading = value;
+				if(_isLoadingChanged)_isLoadingChanged.dispatch();
+			}
+		}
+		
+		private function cancelLocationChange():void{
+			if(_lastEvent){
+				_lastEvent.preventDefault();
+				_lastEvent = null;
+			}
 		}
 	}
 }

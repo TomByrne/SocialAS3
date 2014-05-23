@@ -10,6 +10,7 @@ package social.fb
 	import social.desc.ArgDesc;
 	import social.fb.vo.Album;
 	import social.fb.vo.Image;
+	import social.fb.vo.NameTag;
 	import social.fb.vo.Photo;
 	import social.fb.vo.ProfilePicture;
 	import social.fb.vo.User;
@@ -35,12 +36,16 @@ package social.fb
 		public static const CALL_FQL					:String		= "fql";
 		public static const CALL_FQL_MULTI				:String		= "fqlMulti";
 		
-		public static const CALL_ALBUM					:String		= "album";
 		public static const CALL_ALBUMS					:String		= "albums";
+		
+		public static const CALL_ALBUM					:String		= "album";
 		public static const CALL_ALBUM_PICTURE			:String		= "albumPicture";
 		public static const CALL_ALBUM_PHOTOS			:String		= "albumPhotos";
 		public static const CALL_PICTURE				:String		= "picture";
 		public static const CALL_PICTURE_INFO			:String		= "pictureInfo";
+		
+		public static const CALL_PHOTO					:String		= "photo";
+		public static const CALL_LINK					:String		= "link";
 		
 		public static const CALL_USER_ALBUMS			:String		= "userAlbums";
 		public static const CALL_USER_PICTURE			:String		= "userPicture";
@@ -48,6 +53,8 @@ package social.fb
 		
 		public static const CALL_SELF					:String		= "self";
 		public static const CALL_FRIENDS				:String		= "friends";
+		
+		public static const CALL_REMOVE_PERMISSIONS		:String		= "revokePermissions";
 		
 		protected static const AUTH_URL:String = "https://www.facebook.com/dialog/oauth?client_id="+URL_CLIENT_ID+"&redirect_uri="+URL_REDIRECT_URL+"&response_type=token&scope="+URL_PERMISSIONS;
 		protected static const API_URL:String = "https://graph.facebook.com/"+HttpLoader.URL_ENDPOINT+"?access_token="+OAuth2.URL_ACCESS_TOKEN;
@@ -78,12 +85,21 @@ package social.fb
 			var parseImage:Function = HttpLoader.createParser(Image, null,
 				{"source":"source", "width":"width", "height":"height"});
 			
-			var parsePhoto:Function = HttpLoader.createParser(Photo, {"from":parseUser, "created_time":dateParser, "updated_time":dateParser, "images":HttpLoader.createArrParser(parseImage)},
+			var parseNameTag:Function = HttpLoader.createParser(NameTag, null,
+				{"id":"id", "object":"object", "length":"length", "name":"name", "offset":"offset", "type":"type"});
+			
+			var parsePhoto:Function = HttpLoader.createParser(Photo, {"from":parseUser, "created_time":dateParser, "updated_time":dateParser, "backdated_time":dateParser,
+				"images":HttpLoader.createArrParser(parseImage), "name_tags":HttpLoader.createArrParser(parseNameTag)},
 				{"id":"id", "width":"width", "height":"height", "created_time":"createdTime",
 					"from":"from", "icon":"icon", "images":"imagesArr", "link":"link", "name":"name",
-					"picture":"picture", "source":"source", "updated_time":"updatedTime"});
+					"picture":"picture", "source":"source", "updated_time":"updatedTime", "backdated_time":"backdatedTime",
+					"backdated_time_granularity":"backdatedTimeGranularity", "pageStoryId":"page_story_id", "place":"place", "name_tags":"nameTagsArr"});
 			
 			var parseProfPic:Function = HttpLoader.createParser(ProfilePicture, null,{"url":"url", "width":"width", "height":"height", "is_silhouette":"isSilhouette"});
+			
+			var parseLink:Function = HttpLoader.createParser(Photo, {"from":parseUser, "created_time":dateParser},
+				{"id":"id", "created_time":"createdTime", "description":"description", "from":"from",
+					"icon":"icon", "link":"link", "message":"message", "name":"name", "picture":"picture"});
 			
 			var onUser:Function = HttpLoader.createHandler(parseUser);
 			var onUsers:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseUser), "data");
@@ -95,6 +111,8 @@ package social.fb
 			var onPhotos:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parsePhoto), "data");
 			
 			var onProfPic:Function = HttpLoader.createHandler(parseProfPic, "data");
+			
+			var onLink:Function = HttpLoader.createHandler(parseLink);
 			
 			
 			_oauthUrl = new UrlProvider(true, AUTH_URL);
@@ -116,6 +134,7 @@ package social.fb
 			addProp(URL_CLIENT_ID, "Instagram application client ID", false);
 			addProp(URL_REDIRECT_URL, "Instagram application redirect URL", false);
 			
+			var showImmediately:ArgDesc = a("showImmediately", "Show web view while loading", true, null, Boolean);
 			var userId:ArgDesc 			= a("userId", "Relevant user");
 			var objectId:ArgDesc 		= a("objectId", "Object to retrieve");
 			var picType:ArgDesc 		= a("type", "Get a pre-specified size of picture", true);
@@ -126,7 +145,7 @@ package social.fb
 			var s2:String = PlatformState.STATE_AUTHENTICATING;
 			var s3:String = PlatformState.STATE_AUTHENTICATED;
 			
-			addCall(GATEWAY_OAUTH, CALL_AUTH, s1, [], _oauthUrl, "Revives session  if possible, otherwise displays login view.", null, {doAuth:true});
+			addCall(GATEWAY_OAUTH, CALL_AUTH, s1, [showImmediately], _oauthUrl, "Revives session  if possible, otherwise displays login view.", null, {doAuth:true});
 			addEndpointCall(GATEWAY_JSON, CALL_LOGOUT, s3, "logout", [], _logoutUrl, "Deauthenticate user", onLogout);
 			
 			addEndpointCall(GATEWAY_JSON, CALL_SELF, s3, "me", [], _callUrl, "The user's info.", onUser);
@@ -143,6 +162,10 @@ package social.fb
 			addEndpointCall(GATEWAY_IMAGE, CALL_USER_PICTURE, s3, URL_USER_ID+"/picture", [userId, picType, picWidth, picHeight], _callUrl, "Get a user's profile picture.", HttpLoader.loaderHandler);
 			addEndpointCall(GATEWAY_JSON, CALL_USER_PICTURE_INFO, s3, URL_USER_ID+"/picture?redirect=false", [userId, picType, picWidth, picHeight], _callUrl, "Get a user's profile picture information.", onProfPic);
 			
+			addEndpointCall(GATEWAY_JSON, CALL_LINK, s3, URL_OBJECT_ID, [objectId], _callUrl, "Get a link's info.", onLink);
+			addEndpointCall(GATEWAY_JSON, CALL_PHOTO, s3, URL_OBJECT_ID, [objectId], _callUrl, "Get a photo's info.", onPhoto);
+			
+			addEndpointCall(GATEWAY_JSON, CALL_REMOVE_PERMISSIONS, s3, "me/permissions", [], _callUrl, "Remove all permissions.", null, null, HttpLoader.PROTOCOL_DELETE);
 			
 			
 			addEndpointCall(GATEWAY_JSON, CALL_FQL, s3, "fql", [a("q", "FQL query")], _callUrl, "The query to execute.", HttpLoader.createHandler(null, "data"));

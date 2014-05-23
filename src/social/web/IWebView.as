@@ -4,8 +4,11 @@ package social.web
 
 	public interface IWebView
 	{
-		function get loadComplete():Signal;
-		function get locationChanged():Signal;
+		function get loadComplete():Signal;    // -> (success:*, fail:*)
+		function get locationChanged():Signal; // -> (cancelHandler:Function)
+		
+		function get isLoading():Boolean;
+		function get isLoadingChanged():Signal;
 		
 		function showView(url:String, showImmediately:Boolean):void;
 		function hideView():void;

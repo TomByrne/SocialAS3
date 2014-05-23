@@ -18,8 +18,8 @@ package social.core
 	public class Platform
 	{
 
-		protected static function a(name:String, desc:String, optional:Boolean=false, def:*=null):ArgDesc{
-			return new ArgDesc(name, desc, optional, def);
+		protected static function a(name:String, desc:String, optional:Boolean=false, def:*=null, type:Class = null):ArgDesc{
+			return new ArgDesc(name, desc, optional, def, type);
 		}
 		
 		public function get label():String{

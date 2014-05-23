@@ -4,9 +4,8 @@ package
 	import com.bit101.components.ComboBox;
 	import com.bit101.components.Component;
 	import com.bit101.components.HBox;
-	import com.bit101.components.InputText;
-	import com.bit101.components.Label;
 	import com.bit101.components.PushButton;
+	import com.bit101.components.Text;
 	import com.bit101.components.TextArea;
 	import com.bit101.components.VBox;
 	
@@ -18,6 +17,10 @@ package
 	import flash.utils.Dictionary;
 	import flash.utils.describeType;
 	import flash.utils.getQualifiedClassName;
+	
+	import propEditors.BooleanPropEditor;
+	import propEditors.DefaultPropEditor;
+	import propEditors.IPropEditor;
 	
 	import social.core.Platform;
 	import social.desc.ArgDesc;
@@ -31,6 +34,13 @@ package
 	[SWF(width='1200', height='800', backgroundColor='#ffffff', frameRate='30')]
 	public class TestAPI extends Sprite
 	{
+		
+		static private const DEFAULT_EDITOR:Class = DefaultPropEditor;
+		static private var EDITOR_MAP:Dictionary;{
+			EDITOR_MAP = new Dictionary();
+			EDITOR_MAP[String]		= DefaultPropEditor;
+			EDITOR_MAP[Boolean]		= BooleanPropEditor;
+		}
 		
 		
 		private var _platforms:Array;
@@ -46,10 +56,11 @@ package
 		
 		
 		private var _callButtons:Dictionary;
-		private var _callFields:Dictionary;
+		private var _callEditors:Dictionary;
 		
 		private var _selectedPlatform:Platform;
 		private var _selectedCall:CallDesc;
+		private var _cancelAuthButton:PushButton;
 		
 		public function TestAPI()
 		{
@@ -92,10 +103,20 @@ package
 			instagram.setProp(InstagramPlatform.URL_REDIRECT_URL, "http://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php?userGroupID=7");
 			addPlatform(instagram);
 			
-			_platformCombo = new ComboBox(_platformCol, 0, 0, "Platform", _platforms);
+			var platformHeader:HBox = new HBox(_platformCol);
+			
+			_platformCombo = new ComboBox(platformHeader, 0, 0, "Platform", _platforms);
 			_platformCombo.addEventListener(Event.SELECT, onPlatformSelected);
 			_platformCombo.selectedIndex = 0;
-			_platformCombo.width = 250;
+			_platformCombo.width = 170;
+			
+			_cancelAuthButton = new PushButton(platformHeader, 0, 0, "Cancel Auth", onCancelAuthClick);
+			_cancelAuthButton.width = 75;
+		}
+		
+		private function onCancelAuthClick(e:Event):void
+		{
+			_selectedPlatform.cancelAuth();
 		}
 		
 		private function onClearResult(e:Event):void
@@ -140,24 +161,24 @@ package
 			}
 			
 			_selectedCall = call;
-			_callFields = new Dictionary();
+			_callEditors = new Dictionary();
 			
-			var textArea:TextArea = new TextArea(_callCont, 0,0, call.desc);
+			var textArea:Text = new Text(_callCont, 0,0, call.desc);
 			textArea.width = 250;
 			textArea.editable = false;
+			textArea.height = textArea.textField.textHeight + 10;
 			
 			var args:Vector.<ArgDesc> = _selectedCall.args;
 			for each(var arg:ArgDesc in args){
-				var row:HBox = new HBox(_callCont);
-				var nameLabel:Label = new Label(row, 0, 0, arg.name+(arg.optional?"":"*"));
+				var editorType:Class;
+				if(arg.type)editorType = EDITOR_MAP[arg.type];
+				if(!editorType)editorType = DEFAULT_EDITOR;
 				
-				var descLabel:Label = new Label(row, 0, 0, " - "+arg.desc);
-				descLabel.alpha = 0.5;
+				var editor:IPropEditor = new editorType();
+				editor.setArg(arg);
+				_callEditors[arg] = editor;
 				
-				var input:InputText = new InputText(_callCont, 0,0, arg.def);
-				input.width = 250;
-				
-				_callFields[arg] = input;
+				_callCont.addChild(editor.display);
 			}
 			var button:PushButton = new PushButton(_callCont, 0, 0, "Execute", closure(onCallExecuted, [call]));
 		}
@@ -178,16 +199,14 @@ package
 			var failed:Boolean;
 			var argVals:Object = {};
 			for each(var arg:ArgDesc in args){
-				var input:InputText = _callFields[arg];
-				if(!arg.optional && input.text.length==0){
-					input.opaqueBackground = 0xff0000;
+				var editor:IPropEditor = _callEditors[arg];
+				if(!editor.validate()){
 					failed = true;
-				}else{
-					input.opaqueBackground = null;
 				}
-				if(input.text.length){
-					argVals[arg.name] = input.text;
-					text += ("\n  - "+arg.name+" = "+input.text);
+				if(editor.hasValue()){
+					var value:* = editor.getValue();
+					argVals[arg.name] = value;
+					text += ("\n  - "+arg.name+" = "+value);
 				}
 			}
 			if(failed)return;

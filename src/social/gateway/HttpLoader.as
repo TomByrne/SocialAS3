@@ -19,6 +19,7 @@ package social.gateway
 	{
 		public static const PROTOCOL_GET		:String = "GET";
 		public static const PROTOCOL_POST		:String = "POST";
+		public static const PROTOCOL_DELETE		:String = "DELETE";
 		
 		public static const URL_ENDPOINT		:String		= "${endPoint}";
 		
@@ -232,20 +233,7 @@ package social.gateway
 			}
 			
 			if(!protocol)protocol = _defaultProtocol;
-			if (protocol == "GET" )
-			{
-				var params:String = "";
-				if ( args )
-				{
-					for ( prop in args )
-					{
-						params += "&"+prop+"="+args[prop]; 
-					}
-				}
-				request = new URLRequest( url + params );
-			}
-				
-			else if ( protocol == "POST" )
+			if ( protocol == "POST" )
 			{
 				urlVars = new URLVariables();
 				
@@ -259,8 +247,19 @@ package social.gateway
 				
 				request	= new URLRequest( urlProvider.url );
 				request.data = urlVars;
-					
+				
+			}else{
+				var params:String = "";
+				if ( args )
+				{
+					for ( prop in args )
+					{
+						params += "&"+prop+"="+args[prop]; 
+					}
+				}
+				request = new URLRequest( url + params );
 			}
+			
 			loader.dataFormat = _dataFormat;
 			request.method = protocol;
 			trace( protocol +" - "+loader.dataFormat+ " - request: " + request.url );

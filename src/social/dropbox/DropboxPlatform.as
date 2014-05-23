@@ -128,18 +128,21 @@ package social.dropbox
 			addProp(URL_REDIRECT_URL, "Application redirect URL", false);
 			addProp(URL_LOCALE, "Locale", true);
 			
+			var showImmediately:ArgDesc = a("showImmediately", "Show web view while loading", true, null, Boolean);
+			var argRoot:ArgDesc = a("root", "Root file structure - Shold be 'dropbox', 'sandbox', or 'auto'", false, "dropbox" );
+			var argFilePath:ArgDesc = a("filePath", "File concerned", true, "" );
+			var argIncMediaInf:ArgDesc = a("include_media_info", "If true, each file will include a photo_info dictionary for photos and a video_info dictionary for videos with additional media info.", true );
+			
+			
 			var s1:String = PlatformState.STATE_UNAUTHENTICATED;
 			var s2:String = PlatformState.STATE_AUTHENTICATING;
 			var s3:String = PlatformState.STATE_AUTHENTICATED;
 			
-			addCall(GATEWAY_OAUTH, CALL_AUTH, s1, [], _oauthUrl, "Revives session  if possible, otherwise displays login view.", null, {doAuth:true});
+			addCall(GATEWAY_OAUTH, CALL_AUTH, s1, [showImmediately], _oauthUrl, "Revives session  if possible, otherwise displays login view.", null, {doAuth:true});
 			addEndpointCall(GATEWAY_JSON, CALL_LOGOUT, s3, "disable_access_token/", [], _callUrl, "Deauthenticate user", onLogout);
 			
 			addEndpointCall(GATEWAY_JSON, CALL_GET_SELF, s3, "account/info/", [], _callUrl, "Retrieves information about the user's account.", onUser);
 			
-			var argRoot:ArgDesc = a("root", "Root file structure - Shold be 'dropbox', 'sandbox', or 'auto'", false, "dropbox" );
-			var argFilePath:ArgDesc = a("filePath", "File concerned", true, "" );
-			var argIncMediaInf:ArgDesc = a("include_media_info", "If true, each file will include a photo_info dictionary for photos and a video_info dictionary for videos with additional media info.", true );
 			addEndpointCall(GATEWAY_IMAGE, CALL_GET_FILE, s3, "files/${root}/${filePath}", [argRoot, argFilePath], _contentUrl, "Downloads a file.", HttpLoader.loaderHandler);
 			//addEndpointCall(GATEWAY_JSON, CALL_PUT_FILE, s3, "files_put/${root}/${filePath}", [argRoot, argFilePath], _contentUrl, "Uploads a file.", onUser, null, JsonRest.PROTOCOL_POST);
 			addEndpointCall(GATEWAY_JSON, CALL_GET_METADATA, s3, "metadata/${root}/${filePath}", [

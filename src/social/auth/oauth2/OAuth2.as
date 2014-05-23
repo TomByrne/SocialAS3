@@ -31,6 +31,7 @@ package social.auth.oauth2
 		private var _pendingAuth			:Boolean;
 		private var _onCompletes			:Array;
 		private var _tokenTested			:Boolean;
+		private var _showImmediately:Boolean;
 		
 		
 		public function OAuth2(urlScopeChecker:Function, tokenSearcher:RegExp=null)
@@ -76,7 +77,9 @@ package social.auth.oauth2
 			if(!url)return;
 			
 			_pendingAuth = true;
+			_showImmediately = showImmediately;
 			
+			trace("oauth2 - "+url);
 			_webView.loadComplete.add(onLoadComplete);
 			_webView.locationChanged.add(onLocationChanged);
 			_webView.showView(url, showImmediately);
@@ -111,12 +114,12 @@ package social.auth.oauth2
 			}
 		}
 		
-		private function onLocationChanged():void
+		private function onLocationChanged(cancelHandler:Function):void
 		{
-			checkLocation();
+			checkLocation(cancelHandler);
 		}
 		
-		private function checkLocation():void
+		private function checkLocation(cancelHandler:Function=null):void
 		{
 			if(!_pendingAuth)return;
 			
@@ -134,9 +137,18 @@ package social.auth.oauth2
 				cleanupAuth();
 				callComplete(true, null);
 			}
-			else if(_urlScopeChecker==null || !_urlScopeChecker(location))
-			{
+			else if(_urlScopeChecker==null){
 				cancelAuth();
+			}
+			else if(!_urlScopeChecker(location)){
+				if(cancelHandler!=null){
+					cancelHandler();
+				}else{
+					if(!_showImmediately){
+						_webView.hideView();
+					}
+					_webView.showView(_urlProvider.url, _showImmediately);
+				}
 			}
 		}
 		

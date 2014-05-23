@@ -110,6 +110,7 @@ package social.instagram
 			addProp(URL_CLIENT_ID, "Instagram application client ID", false);
 			addProp(URL_REDIRECT_URL, "Instagram application redirect URL", false);
 			
+			var showImmediately:ArgDesc = a("showImmediately", "Show web view while loading", true, null, Boolean);
 			var userId:ArgDesc 			= a("userID", "User to retrieve");
 			var locationId:ArgDesc 		= a("locID", "Location to retrieve");
 			var tagId:ArgDesc 			= a("tagID", "Tag to retrieve");
@@ -124,7 +125,7 @@ package social.instagram
 			var s2:String = PlatformState.STATE_AUTHENTICATING;
 			var s3:String = PlatformState.STATE_AUTHENTICATED;
 			
-			addCall(GATEWAY_OAUTH, CALL_AUTH, s1, [], _oauthUrl, "Revives session  if possible, otherwise displays login view.", null, {doAuth:true});
+			addCall(GATEWAY_OAUTH, CALL_AUTH, s1, [showImmediately], _oauthUrl, "Revives session  if possible, otherwise displays login view.", null, {doAuth:true});
 			addEndpointCall(GATEWAY_JSON, CALL_LOGOUT, s3, "accounts/logout/", [], _logoutUrl, "Deauthenticate user", onLogout);
 			
 			addEndpointCall(GATEWAY_JSON, CALL_GET_FEED, s3, "users/self/feed/", [count, minId, maxId], _callUrl, "Get current user's feed.", onPhotos);
