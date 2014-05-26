@@ -10,6 +10,9 @@ package social.web
 		function get isLoading():Boolean;
 		function get isLoadingChanged():Signal;
 		
+		function get isPopulated():Boolean;
+		function get isPopulatedChanged():Signal;
+		
 		function showView(url:String, showImmediately:Boolean):void;
 		function hideView():void;
 		

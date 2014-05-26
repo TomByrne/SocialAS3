@@ -9,10 +9,13 @@ package social.fb
 	import social.core.UrlProvider;
 	import social.desc.ArgDesc;
 	import social.fb.vo.Album;
+	import social.fb.vo.Comment;
 	import social.fb.vo.Image;
+	import social.fb.vo.Message;
 	import social.fb.vo.NameTag;
 	import social.fb.vo.Photo;
 	import social.fb.vo.ProfilePicture;
+	import social.fb.vo.Thread;
 	import social.fb.vo.User;
 	import social.gateway.HttpLoader;
 	import social.util.DateParser;
@@ -37,6 +40,7 @@ package social.fb
 		public static const CALL_FQL_MULTI				:String		= "fqlMulti";
 		
 		public static const CALL_ALBUMS					:String		= "albums";
+		public static const CALL_INBOX					:String		= "inbox";
 		
 		public static const CALL_ALBUM					:String		= "album";
 		public static const CALL_ALBUM_PICTURE			:String		= "albumPicture";
@@ -45,7 +49,9 @@ package social.fb
 		public static const CALL_PICTURE_INFO			:String		= "pictureInfo";
 		
 		public static const CALL_PHOTO					:String		= "photo";
+		public static const CALL_MESSAGE				:String		= "message";
 		public static const CALL_LINK					:String		= "link";
+		public static const CALL_THREAD					:String		= "thread";
 		
 		public static const CALL_USER_ALBUMS			:String		= "userAlbums";
 		public static const CALL_USER_PICTURE			:String		= "userPicture";
@@ -101,6 +107,16 @@ package social.fb
 				{"id":"id", "created_time":"createdTime", "description":"description", "from":"from",
 					"icon":"icon", "link":"link", "message":"message", "name":"name", "picture":"picture"});
 			
+			var parseComment:Function = HttpLoader.createParser(Comment, {"from":parseUser, "created_time":dateParser},
+				{"id":"id", "created_time":"createdTime", "message":"message", "from":"from"});
+			
+			var parseMessage:Function = HttpLoader.createParser(Message, {"from":parseUser, "created_time":dateParser, "updated_time":dateParser, "to":HttpLoader.createArrParser(parseUser)},
+				{"id":"id", "created_time":"createdTime", "to":"toArr", "comments.data":"commentsArr", "message":"message", "from":"from"});
+			
+			var parseThread:Function = HttpLoader.createParser(Thread, {"created_time":dateParser, "updated_time":dateParser, "to":HttpLoader.createArrParser(parseUser), "comments.data":HttpLoader.createArrParser(parseComment)},
+				{"id":"id", "created_time":"createdTime", "updated_time":"updatedTime", "to":"toArr", "comments.data":"commentsArr", "unread":"unread", "unseen":"unseen"});
+			
+			
 			var onUser:Function = HttpLoader.createHandler(parseUser);
 			var onUsers:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseUser), "data");
 			
@@ -110,13 +126,19 @@ package social.fb
 			var onPhoto:Function = HttpLoader.createHandler(parsePhoto);
 			var onPhotos:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parsePhoto), "data");
 			
+			var onMessage:Function = HttpLoader.createHandler(parseMessage);
+			var onMessages:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseMessage), "data");
+			
+			var onThread:Function = HttpLoader.createHandler(parseThread);
+			var onThreads:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseThread), "data");
+			
 			var onProfPic:Function = HttpLoader.createHandler(parseProfPic, "data");
 			
 			var onLink:Function = HttpLoader.createHandler(parseLink);
 			
 			
 			_oauthUrl = new UrlProvider(true, AUTH_URL);
-			_oauthUrl.setupArrayToken(URL_PERMISSIONS, "+", ["user_photos", "friends_photos"]);
+			_oauthUrl.setupArrayToken(URL_PERMISSIONS, "+", ["user_photos", "friends_photos", "read_mailbox"]);
 			_oauthUrl.setToken(URL_CLIENT_ID, "");
 			_oauthUrl.setToken(URL_REDIRECT_URL, "");
 			
@@ -164,6 +186,10 @@ package social.fb
 			
 			addEndpointCall(GATEWAY_JSON, CALL_LINK, s3, URL_OBJECT_ID, [objectId], _callUrl, "Get a link's info.", onLink);
 			addEndpointCall(GATEWAY_JSON, CALL_PHOTO, s3, URL_OBJECT_ID, [objectId], _callUrl, "Get a photo's info.", onPhoto);
+			addEndpointCall(GATEWAY_JSON, CALL_THREAD, s3, URL_OBJECT_ID, [objectId], _callUrl, "Get a thread's info.", onThread);
+			addEndpointCall(GATEWAY_JSON, CALL_MESSAGE, s3, URL_OBJECT_ID, [objectId], _callUrl, "Get a message.", onMessage);
+			
+			addEndpointCall(GATEWAY_JSON, CALL_INBOX, s3, "me/inbox", [], _callUrl, "Get user's inbox messages.", onThreads);
 			
 			addEndpointCall(GATEWAY_JSON, CALL_REMOVE_PERMISSIONS, s3, "me/permissions", [], _callUrl, "Remove all permissions.", null, null, HttpLoader.PROTOCOL_DELETE);
 			

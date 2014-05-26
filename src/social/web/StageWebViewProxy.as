@@ -23,6 +23,10 @@ package social.web
 			if(!_isLoadingChanged)_isLoadingChanged = new Signal();
 			return _isLoadingChanged;
 		}
+		public function get isPopulatedChanged():Signal{
+			if(!_isPopulatedChanged)_isPopulatedChanged = new Signal();
+			return _isPopulatedChanged;
+		}
 		
 		public function get location():String{
 			return _location || _webView.location;
@@ -40,24 +44,29 @@ package social.web
 		}
 		public function set stage(value:Stage):void{
 			_stage = value;
-			if(_webView.stage || (_isRequested || !_isLoading))_webView.stage = value;
+			if(_webView.stage || (_isPopulated || !_isLoading))_webView.stage = value;
 		}
 		
 		public function get isLoading():Boolean{
 			return _isLoading;
 		}
 		
+		public function get isPopulated():Boolean{
+			return _isPopulated;
+		}
+		
 		private var _stage:Stage;
 		private var _webView:StageWebView;
 		private var _isLoading:Boolean;
 		private var _ignoreChanges:Boolean;
-		private var _isRequested:Boolean;
+		private var _isPopulated:Boolean;
 		private var _location:String;
+		private var _lastEvent:LocationChangeEvent;
 		
 		private var _loadComplete:Signal;
 		private var _locationChanged:Signal;
 		private var _isLoadingChanged:Signal;
-		private var _lastEvent:LocationChangeEvent;
+		private var _isPopulatedChanged:Signal;
 		
 		public function StageWebViewProxy(stage:Stage=null, viewPort:Rectangle=null){
 			_stage = stage;
@@ -79,14 +88,14 @@ package social.web
 		
 		protected function onLoadError(event:ErrorEvent):void{
 			_location = null;
-			if(_ignoreChanges || !_isRequested)return;
+			if(_ignoreChanges || !_isPopulated)return;
 			
 			_loadComplete.dispatch(null, true);
 		}
 		
 		protected function onLoadSuccess(event:Event):void{
 			_location = null;
-			if(_ignoreChanges || !_isRequested)return;
+			if(_ignoreChanges || !_isPopulated)return;
 			if(_isLoading)_webView.stage = stage;
 			setIsLoading(false);
 			_loadComplete.dispatch(true, null);
@@ -94,14 +103,14 @@ package social.web
 		
 		public function showView(url:String, showImmediately:Boolean):void{
 			_location = null;
-			_isRequested = true;
+			setIsPopulated(true);
 			setIsLoading(true);			
 			_webView.loadURL(url);
 			if(showImmediately)_webView.stage = _stage;
 		}
 		public function hideView():void{
 			_location = null;
-			_isRequested = false;
+			setIsPopulated(false);
 			_webView.stage = null;
 			setIsLoading(false);
 			_ignoreChanges = true;
@@ -114,6 +123,14 @@ package social.web
 			if(_isLoading!=value){
 				_isLoading = value;
 				if(_isLoadingChanged)_isLoadingChanged.dispatch();
+			}
+		}
+		
+		private function setIsPopulated(value:Boolean):void
+		{
+			if(_isPopulated!=value){
+				_isPopulated = value;
+				if(_isPopulatedChanged)_isPopulatedChanged.dispatch();
 			}
 		}
 		
