@@ -178,6 +178,7 @@ package social.instagram
 		
 		private function checkAuthUrl(url:String):Boolean{
 			return (
+				url.indexOf("instagram.com")==-1 || // allows for redirect URL
 				url.indexOf("instagram.com/accounts/login")!=-1 ||
 				url.indexOf("instagram.com/accounts/password")!=-1 ||
 				url.indexOf("instagram.com/oauth")!=-1

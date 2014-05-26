@@ -609,6 +609,7 @@ package social.fb
 		
 		private function checkAuthUrl(url:String):Boolean{
 			return (
+				url.indexOf("facebook.com")==-1 || // allows for redirect URL
 				url.indexOf("facebook.com/dialog/oauth")!=-1 ||
 				url.indexOf("facebook.com/v1.0/dialog/oauth")!=-1 ||
 				url.indexOf("facebook.com/login")!=-1  ||

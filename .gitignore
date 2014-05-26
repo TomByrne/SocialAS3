@@ -1,3 +1,5 @@
 /bin-debug/TestAPI-app.xml
 /bin-debug/TestAPI.swf
 /bin-release/SocialAS3.swc
+/bin-release
+/build/cert.p12
