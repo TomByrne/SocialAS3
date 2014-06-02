@@ -87,6 +87,16 @@ package social.web
 		}
 		
 		protected function onLoadError(event:ErrorEvent):void{
+			if ( null != event.text && event.text.indexOf("NSURLErrorDomain error -999") != -1 )
+			{
+				/* It's safe to ignore that error because is is
+				returned when an asynchronous load is canceled. A Web Kit framework
+				delegate will receive this error when it performs a cancel operation on a
+				loading resource. Note that an NSURLConnection or NSURLDownload delegate
+				will not receive this error if the download is canceled
+				*/
+				return;
+			}
 			_location = null;
 			if(_ignoreChanges || !_isPopulated)return;
 			

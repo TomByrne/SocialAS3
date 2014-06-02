@@ -10,9 +10,14 @@ package propEditors
 	
 	public class BasePropEditor extends VBox implements IPropEditor
 	{
+		override public function get height():Number{
+			return _height;
+		}
+		
 		private var _label:Label;
 		private var _description:Text;
 		private var _arg:ArgDesc;
+		private var _height:Number;
 		
 		public function BasePropEditor(doDesc:Boolean)
 		{
@@ -40,6 +45,7 @@ package propEditors
 				_description.text = arg.desc;
 				_description.height = _description.textField.textHeight + 10;
 			}
+			_height = _description.y + _description.height + 28;
 		}
 		
 		public function validate():Boolean
