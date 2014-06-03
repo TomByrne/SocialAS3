@@ -4,11 +4,13 @@ package social.gateway
 	import flash.display.LoaderInfo;
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
+	import flash.events.SecurityErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLLoaderDataFormat;
 	import flash.net.URLRequest;
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
+	import flash.utils.Dictionary;
 	
 	import social.auth.IAuth;
 	import social.core.IUrlProvider;
@@ -20,6 +22,15 @@ package social.gateway
 		public static const PROTOCOL_GET		:String = "GET";
 		public static const PROTOCOL_POST		:String = "POST";
 		public static const PROTOCOL_DELETE		:String = "DELETE";
+		
+		private static var _loaders:Vector.<URLLoader> = new Vector.<URLLoader>();
+		private static function takeLoader():URLLoader{
+			if(_loaders.length)return _loaders.pop();
+			else return new URLLoader();
+		}
+		private static function returnLoader(value:URLLoader):void{
+			_loaders.push(value);
+		}
 		
 		public static const URL_ENDPOINT		:String		= "${endPoint}";
 		
@@ -87,6 +98,8 @@ package social.gateway
 			obj["*"] = obj; // allows for splitting data definitions (e.g. User/Role)
 			for(var i:String in propMapper){
 				var value:* = getProp(obj, i);
+				if(value==null)continue;
+				
 				var dest:String = propMapper[i];
 				if(childParsers){
 					var parser:Function = childParsers[i];
@@ -206,11 +219,14 @@ package social.gateway
 			return url + params;
 		}
 		
+		private var _loaderToComplete:Dictionary = new Dictionary();
 		public function doRequest( urlProvider:IUrlProvider, args:Object, protocol:String, onComplete:Function=null ):void
 		{
-			var loader:URLLoader = new URLLoader();
-			loader.addEventListener( Event.COMPLETE, closure(onDataSuccess, [onComplete], true));
-			loader.addEventListener( IOErrorEvent.IO_ERROR, closure(onDataFailure, [onComplete], true));
+			var loader:URLLoader = takeLoader();
+			_loaderToComplete[loader] = onComplete;
+			loader.addEventListener( Event.COMPLETE, onDataSuccess);
+			loader.addEventListener( IOErrorEvent.IO_ERROR, onDataFailure);
+			loader.addEventListener( SecurityErrorEvent.SECURITY_ERROR, onDataFailure);
 			
 			var request:URLRequest;
 			var urlVars:URLVariables;
@@ -266,16 +282,30 @@ package social.gateway
 			
 			loader.load( request );
 		}
-		private function onDataSuccess(e:Event, onComplete:Function):void{
+		private function onDataSuccess(e:Event):void{
+			var onComplete:Function = _loaderToComplete[e.target];
 			_oauth.markTokenWorks();
 			var loader:URLLoader = (e.target as URLLoader);
 			if(onComplete!=null)onComplete(loader.data, null);
+			cleanUp(loader);
 		}
-		private function onDataFailure(e:IOErrorEvent, onComplete:Function):void{
+		private function onDataFailure(e:Event):void{
+			var onComplete:Function = _loaderToComplete[e.target];
 			if(!_oauth.tokenTested){
 				_oauth.accessToken = null;
 			}
 			if(onComplete!=null)onComplete(null, e);
+			cleanUp(e.target as URLLoader);
+		}
+		
+		private function cleanUp(loader:URLLoader):void
+		{
+			delete _loaderToComplete[loader];
+			loader.close();
+			loader.removeEventListener( Event.COMPLETE, onDataSuccess);
+			loader.removeEventListener( IOErrorEvent.IO_ERROR, onDataFailure);
+			loader.removeEventListener( SecurityErrorEvent.SECURITY_ERROR, onDataFailure);
+			returnLoader(loader);
 		}
 	}
 }

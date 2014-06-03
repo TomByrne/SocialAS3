@@ -73,7 +73,7 @@ package social.fb
 		private var _oauth:OAuth2;
 		private var _webView:StageWebViewProxy;
 		
-		public function FacebookPlatform(){
+		public function FacebookPlatform(permissions:Array){
 			
 			var dateParser:Function = DateParser.parser("%G-%m-%eT%H:%M:%S+%z", true);
 			
@@ -138,7 +138,7 @@ package social.fb
 			
 			
 			_oauthUrl = new UrlProvider(true, AUTH_URL);
-			_oauthUrl.setupArrayToken(URL_PERMISSIONS, "+", ["user_photos", "friends_photos", "read_mailbox"]);
+			_oauthUrl.setupArrayToken(URL_PERMISSIONS, "+", permissions);
 			_oauthUrl.setToken(URL_CLIENT_ID, "");
 			_oauthUrl.setToken(URL_REDIRECT_URL, "");
 			

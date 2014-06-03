@@ -26,6 +26,7 @@ package
 	import social.desc.ArgDesc;
 	import social.desc.CallDesc;
 	import social.dropbox.DropboxPlatform;
+	import social.fb.FacebookPermissions;
 	import social.fb.FacebookPlatform;
 	import social.instagram.InstagramPlatform;
 	import social.util.closure;
@@ -88,7 +89,7 @@ package
 			
 			_callCont = new VBox(_mainCont, 0, 30);
 			
-			var facebook:FacebookPlatform	= new FacebookPlatform();
+			var facebook:FacebookPlatform	= new FacebookPlatform([FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox]);
 			facebook.setProp(FacebookPlatform.URL_CLIENT_ID, "262050547226244");
 			facebook.setProp(FacebookPlatform.URL_REDIRECT_URL, "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
 			addPlatform(facebook);

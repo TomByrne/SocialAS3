@@ -35,9 +35,9 @@ package social.fb
 		
 		private var _platform:FacebookPlatform
 		
-		public function Facebook()
+		public function Facebook(permissions:Array)
 		{
-			_platform = new FacebookPlatform();
+			_platform = new FacebookPlatform(permissions);
 		}
 		public function setWebView(webView:IWebView):void{
 			_platform.setWebView(webView);
