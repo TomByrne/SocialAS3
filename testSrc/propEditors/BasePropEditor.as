@@ -44,8 +44,11 @@ package propEditors
 			if(_description){
 				_description.text = arg.desc;
 				_description.height = _description.textField.textHeight + 10;
+				_height = _description.y + _description.height + 28;
+			}else{
+				
+				_height = _label.y + _label.height + 28;
 			}
-			_height = _description.y + _description.height + 28;
 		}
 		
 		public function validate():Boolean

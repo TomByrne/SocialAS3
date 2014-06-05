@@ -127,6 +127,20 @@ package social.auth.oauth2
 			if(!_pendingAuth)return;
 			
 			var location:String = _webView.location;
+			
+			/* 
+			Sometimes FB doesn't URL encode a query string (which is itself a URL),
+			this can trick the cancel search into thinking that login was cancelled.
+			This sucks because there is no way of knowing when the inner URL ends and the parent
+			URL continues listing it's query string, so all query string args afterwards
+			are considered part of the inner URL.
+			*/
+			var qIndex:int = location.indexOf("?");
+			if((qIndex = location.indexOf("?", qIndex+1))!=-1){
+				var begInd:int = location.lastIndexOf("=", qIndex)+1;
+				location = location.substr(0, begInd) + encodeURIComponent(location.substr(begInd));
+			}
+			
 			var newToken:String;
 			var res:Object = _tokenSearcher.exec(location);
 			if(res){
