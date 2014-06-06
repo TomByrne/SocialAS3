@@ -81,9 +81,9 @@ package social.instagram
 				{"id":"id", "type":"type", "images":"sizes", "created_time":"creation", "likes":"likes", "user":"user", "location":"location", "tags":"tags"});
 			
 			var onUser:Function = HttpLoader.createHandler(parseUser, "data");
-			var onUsers:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseUser), "data");
+			var onUsers:Function = HttpLoader.createPaginationHandler(HttpLoader.createArrParser(parseUser), "data", "pagination.next_url");
 			var onPhoto:Function = HttpLoader.createHandler(parsePhoto, "data");
-			var onPhotos:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parsePhoto), "data");
+			var onPhotos:Function = HttpLoader.createPaginationHandler(HttpLoader.createArrParser(parsePhoto), "data", "pagination.next_url");
 			var onLocation:Function = HttpLoader.createHandler(parseLocation, "data");
 			var onLocations:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseLocation), "data");
 			var onTag:Function = HttpLoader.createHandler(parseTag, "data");
@@ -130,11 +130,11 @@ package social.instagram
 			
 			addEndpointCall(GATEWAY_JSON, CALL_GET_FEED, s3, "users/self/feed/", [count, minId, maxId], _callUrl, "Get current user's feed.", onPhotos);
 			addEndpointCall(GATEWAY_JSON, CALL_GET_USER, s3, "users/${userID}/", [userId], _callUrl, "Gets a user's info.", onUser);
-			addEndpointCall(GATEWAY_JSON, CALL_USER_SEARCH, s3, "users/search/", [searchQuery], _callUrl, "Search for users.", onUsers);
+			addEndpointCall(GATEWAY_JSON, CALL_USER_SEARCH, s3, "users/search/", [searchQuery, count], _callUrl, "Search for users.", onUsers);
 			addEndpointCall(GATEWAY_JSON, CALL_GET_SELF, s3, "users/self/", [], _callUrl, "Get current user info.", onUser);
-			addEndpointCall(GATEWAY_JSON, CALL_GET_SELF_RECENT, s3, "users/self/media/recent/", [minId, maxId, minTime, maxTime], _callUrl, "Get current users recent photos.", onPhotos);
-			addEndpointCall(GATEWAY_JSON, CALL_GET_USER_RECENT, s3, "users/${userID}/media/recent/", [userId, minId, maxId, minTime, maxTime], _callUrl, "Get users recent photos.", onPhotos);
-			addEndpointCall(GATEWAY_JSON, CALL_GET_SELF_LIKED, s3, "users/self/media/liked/", [], _callUrl, "See the authenticated user's list of media they've liked.", onPhotos);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_SELF_RECENT, s3, "users/self/media/recent/", [count, minId, maxId, minTime, maxTime], _callUrl, "Get current users recent photos.", onPhotos);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_USER_RECENT, s3, "users/${userID}/media/recent/", [userId, count, minId, maxId, minTime, maxTime], _callUrl, "Get users recent photos.", onPhotos);
+			addEndpointCall(GATEWAY_JSON, CALL_GET_SELF_LIKED, s3, "users/self/media/liked/", [count], _callUrl, "See the authenticated user's list of media they've liked.", onPhotos);
 			
 			addEndpointCall(GATEWAY_JSON, CALL_GET_PHOTO, s3, "media/${photoID}/", [a("photoID", "Photo to retrieve")], _callUrl, "Get a photo's info.", onPhoto);
 			addEndpointCall(GATEWAY_JSON, CALL_PHOTO_SEARCH, s3, "media/search/", [searchQuery], _callUrl, "Search for photos.", onPhotos);

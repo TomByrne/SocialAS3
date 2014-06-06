@@ -63,9 +63,9 @@ package social.instagram
 			_platform.doCall(InstagramPlatform.CALL_GET_FEED, {count:count, max_id:max, min_id:min}, onComplete);
 		}
 		
-		public function userSearch( search:String, onComplete:Function=null ):void
+		public function userSearch( search:String, count:int = -1, onComplete:Function=null ):void
 		{
-			_platform.doCall(InstagramPlatform.CALL_USER_SEARCH, {q:search}, onComplete);
+			_platform.doCall(InstagramPlatform.CALL_USER_SEARCH, {q:search, count:count}, onComplete);
 		}
 		
 		public function getUser( userID:int, onComplete:Function=null ):void
@@ -78,14 +78,14 @@ package social.instagram
 			_platform.doCall(InstagramPlatform.CALL_GET_SELF, {}, onComplete);
 		}
 		
-		public function getSelfRecent( maxId:int = -1, minId:int = -1, maxTimestamp:int = -1, minTimestamp:int = -1, onComplete:Function=null ):void
+		public function getSelfRecent( count:int = -1, maxId:int = -1, minId:int = -1, maxTimestamp:int = -1, minTimestamp:int = -1, onComplete:Function=null ):void
 		{
-			_platform.doCall(InstagramPlatform.CALL_GET_SELF_RECENT, {max_id:maxId, min_id:minId, max_timestamp:maxTimestamp, min_timestamp:minTimestamp}, onComplete);
+			_platform.doCall(InstagramPlatform.CALL_GET_SELF_RECENT, {count:count, max_id:maxId, min_id:minId, max_timestamp:maxTimestamp, min_timestamp:minTimestamp}, onComplete);
 		}
 		
-		public function getUserRecent( userID:int, maxId:int = -1, minId:int = -1, maxTimestamp:int = -1, minTimestamp:int = -1, onComplete:Function=null ):void
+		public function getUserRecent( userID:int, count:int = -1, maxId:int = -1, minId:int = -1, maxTimestamp:int = -1, minTimestamp:int = -1, onComplete:Function=null ):void
 		{
-			_platform.doCall(InstagramPlatform.CALL_GET_USER_RECENT, {userID:userID, max_id:maxId, min_id:minId, max_timestamp:maxTimestamp, min_timestamp:minTimestamp}, onComplete);
+			_platform.doCall(InstagramPlatform.CALL_GET_USER_RECENT, {userID:userID, count:count, max_id:maxId, min_id:minId, max_timestamp:maxTimestamp, min_timestamp:minTimestamp}, onComplete);
 		}
 		
 		public function getLiked( onComplete:Function=null ):void

@@ -155,10 +155,43 @@ package social.gateway
 						onComplete( null, "JSON parsing error");
 						return;
 					}
-					if(dataProp)data = data[dataProp];
+					if(dataProp)data = getProp(data, dataProp);
 					var res:* = parser!=null?parser( data ):data;
 					if(onComplete!=null){
 						onComplete( res || true, null);
+					}
+				}
+			}
+		}
+		public static function createPaginationHandler(parser:Function=null, dataProp:String=null, pagProp:String=null):Function
+		{
+			return _createPaginationHandler(parser, dataProp, pagProp, []);
+		}
+		private static function _createPaginationHandler(parser:Function=null, dataProp:String=null, pagProp:String=null, addTo:Array=null, onMainComplete:Function=null):Function
+		{
+			return function(success:String, fail:*, onComplete:Function=null):void{
+				if(onMainComplete!=null)onComplete = onMainComplete;
+				if(fail){
+					if(onComplete!=null)onComplete(null, fail || true);
+				}else{
+					try{
+						var data:* = JSON.parse( success );
+					}catch(e:Error){}
+					if(data==null){
+						onComplete( null, "JSON parsing error");
+						return;
+					}
+					var nextPage:String;
+					if(pagProp)nextPage = getProp(data, pagProp);
+					if(dataProp)data = getProp(data, dataProp);
+					addTo = addTo.concat(data);
+					if(!data.length || !nextPage){
+						var res:* = parser!=null?parser( addTo ):addTo;
+						if(onComplete!=null){
+							onComplete( res || true, null);
+						}
+					}else{
+						loadPage(nextPage, _createPaginationHandler(parser, dataProp, pagProp, addTo, onComplete));
 					}
 				}
 			}
@@ -301,6 +334,42 @@ package social.gateway
 		private function cleanUp(loader:URLLoader):void
 		{
 			delete _loaderToComplete[loader];
+			loader.close();
+			loader.removeEventListener( Event.COMPLETE, onDataSuccess);
+			loader.removeEventListener( IOErrorEvent.IO_ERROR, onDataFailure);
+			loader.removeEventListener( SecurityErrorEvent.SECURITY_ERROR, onDataFailure);
+			returnLoader(loader);
+		}
+		
+		
+		
+		/// PAGE LOADER
+		private static var _pageLoaderToComplete:Dictionary = new Dictionary();
+		private static function loadPage( pageUrl:String, onComplete:Function=null ):void
+		{
+			var loader:URLLoader = takeLoader();
+			_pageLoaderToComplete[loader] = onComplete;
+			loader.addEventListener( Event.COMPLETE, onDataSuccess);
+			loader.addEventListener( IOErrorEvent.IO_ERROR, onDataFailure);
+			loader.addEventListener( SecurityErrorEvent.SECURITY_ERROR, onDataFailure);
+			
+			loader.dataFormat = URLLoaderDataFormat.TEXT;
+			trace( loader.dataFormat+ " - request: " + pageUrl );
+			loader.load( new URLRequest(pageUrl) );
+		}
+		private static function onDataSuccess(e:Event):void{
+			var onComplete:Function = _pageLoaderToComplete[e.target];
+			var loader:URLLoader = (e.target as URLLoader);
+			if(onComplete!=null)onComplete(loader.data, null);
+			cleanUp(loader);
+		}
+		private static function onDataFailure(e:Event):void{
+			var onComplete:Function = _pageLoaderToComplete[e.target];
+			if(onComplete!=null)onComplete(null, e);
+			cleanUp(e.target as URLLoader);
+		}
+		private static function cleanUp(loader:URLLoader):void{
+			delete _pageLoaderToComplete[loader];
 			loader.close();
 			loader.removeEventListener( Event.COMPLETE, onDataSuccess);
 			loader.removeEventListener( IOErrorEvent.IO_ERROR, onDataFailure);
