@@ -89,10 +89,10 @@ package social.auth.oauth2
 		}
 		public function cancelAuth():void
 		{
-			if(_accessToken){
+			/*if(_accessToken){
 				_accessToken = null;
 				if(_accessTokenChanged)_accessTokenChanged.dispatch();
-			}
+			}*/
 			if(!_pendingAuth)return;
 			cleanupAuth();
 			callComplete(null, true);

@@ -142,8 +142,9 @@ package social.gateway
 				return ret;
 			}
 		}
-		public static function createHandler(parser:Function=null, dataProp:String=null):Function
+		public static function createHandler(parser:Function=null, dataProp:String=null, errorResponseCheck:Function=null):Function
 		{
+			if(errorResponseCheck==null)errorResponseCheck = defaultErrorResponseCheck;
 			return function(success:String, fail:*, onComplete:Function):void{
 				if(fail){
 					if(onComplete!=null)onComplete(null, fail || true);
@@ -155,6 +156,10 @@ package social.gateway
 						onComplete( null, "JSON parsing error");
 						return;
 					}
+					if(errorResponseCheck(data)){
+						onComplete( null, data);
+						return;
+					}
 					if(dataProp)data = getProp(data, dataProp);
 					var res:* = parser!=null?parser( data ):data;
 					if(onComplete!=null){
@@ -163,11 +168,12 @@ package social.gateway
 				}
 			}
 		}
-		public static function createPaginationHandler(parser:Function=null, dataProp:String=null, pagProp:String=null):Function
+		public static function createPaginationHandler(parser:Function=null, dataProp:String=null, pagProp:String=null, errorResponseCheck:Function=null):Function
 		{
-			return _createPaginationHandler(parser, dataProp, pagProp, []);
+			if(errorResponseCheck==null)errorResponseCheck = defaultErrorResponseCheck;
+			return _createPaginationHandler(parser, dataProp, pagProp, errorResponseCheck, []);
 		}
-		private static function _createPaginationHandler(parser:Function=null, dataProp:String=null, pagProp:String=null, addTo:Array=null, onMainComplete:Function=null):Function
+		private static function _createPaginationHandler(parser:Function=null, dataProp:String=null, pagProp:String=null, errorResponseCheck:Function=null, addTo:Array=null, onMainComplete:Function=null):Function
 		{
 			return function(success:String, fail:*, onComplete:Function=null):void{
 				if(onMainComplete!=null)onComplete = onMainComplete;
@@ -181,6 +187,10 @@ package social.gateway
 						onComplete( null, "JSON parsing error");
 						return;
 					}
+					if(errorResponseCheck(data)){
+						onComplete( null, data);
+						return;
+					}
 					var nextPage:String;
 					if(pagProp)nextPage = getProp(data, pagProp);
 					if(dataProp)data = getProp(data, dataProp);
@@ -191,10 +201,14 @@ package social.gateway
 							onComplete( res || true, null);
 						}
 					}else{
-						loadPage(nextPage, _createPaginationHandler(parser, dataProp, pagProp, addTo, onComplete));
+						loadPage(nextPage, _createPaginationHandler(parser, dataProp, pagProp, errorResponseCheck, addTo, onComplete));
 					}
 				}
 			}
+		}
+		
+		private static function defaultErrorResponseCheck(response:Object):Boolean{
+			return response.error!=null;
 		}
 		
 		

@@ -100,6 +100,7 @@ package social.web
 			_location = null;
 			if(_ignoreChanges || !_isPopulated)return;
 			
+			setIsLoading(false);
 			_loadComplete.dispatch(null, true);
 		}
 		
