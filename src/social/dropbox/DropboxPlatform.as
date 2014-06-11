@@ -35,6 +35,7 @@ package social.dropbox
 		
 		public static const CALL_AUTH					:String		= "auth";
 		public static const CALL_LOGOUT					:String		= "logout";
+		public static const CALL_DISABLE_TOKEN			:String		= "disableToken";
 		
 		public static const CALL_GET_SELF				:String		= "getSelf";
 		
@@ -53,10 +54,12 @@ package social.dropbox
 		protected static const AUTH_URL:String = "https://www.dropbox.com/1/oauth2/authorize/?client_id="+URL_CLIENT_ID+"&redirect_uri="+URL_REDIRECT_URL+"&response_type=token&locale="+URL_LOCALE;
 		protected static const API_URL:String = "https://api.dropbox.com/1/"+HttpLoader.URL_ENDPOINT+"?access_token="+OAuth2.URL_ACCESS_TOKEN+"&locale="+URL_LOCALE;
 		protected static const CONTENT_URL:String = "https://api-content.dropbox.com/1/"+HttpLoader.URL_ENDPOINT+"?access_token="+OAuth2.URL_ACCESS_TOKEN;
+		protected static const LOGOUT_URL:String = "https://www.dropbox.com/"+HttpLoader.URL_ENDPOINT+"?access_token="+OAuth2.URL_ACCESS_TOKEN;
 		
 		private var _oauthUrl:UrlProvider;
 		private var _callUrl:UrlProvider;
 		private var _contentUrl:UrlProvider;
+		private var _logoutUrl:UrlProvider;
 		
 		private var _oauth:OAuth2;
 		private var _webView:StageWebViewProxy;
@@ -114,6 +117,7 @@ package social.dropbox
 			_oauthUrl = new UrlProvider(true, AUTH_URL);
 			_callUrl = new UrlProvider(true, API_URL);
 			_contentUrl = new UrlProvider(true, CONTENT_URL);
+			_logoutUrl = new UrlProvider(true, LOGOUT_URL);
 			
 			_oauth = new OAuth2(checkAuthUrl);
 			_oauth.accessTokenChanged.add(onTokenChanged);
@@ -139,7 +143,8 @@ package social.dropbox
 			var s3:String = PlatformState.STATE_AUTHENTICATED;
 			
 			addCall(GATEWAY_OAUTH, CALL_AUTH, s1, [showImmediately], _oauthUrl, "Revives session  if possible, otherwise displays login view.", null, {doAuth:true});
-			addEndpointCall(GATEWAY_JSON, CALL_LOGOUT, s3, "disable_access_token/", [], _callUrl, "Deauthenticate user", onLogout);
+			addEndpointCall(GATEWAY_JSON, CALL_LOGOUT, s3, "logout", [], _logoutUrl, "Deauthenticate user", onLogout);
+			addEndpointCall(GATEWAY_JSON, CALL_DISABLE_TOKEN, s3, "disable_access_token/", [], _callUrl, "Disable access token user", onLogout);
 			
 			addEndpointCall(GATEWAY_JSON, CALL_GET_SELF, s3, "account/info/", [], _callUrl, "Retrieves information about the user's account.", onUser);
 			
@@ -221,6 +226,7 @@ package social.dropbox
 			_oauthUrl.setToken(name, value);
 			_callUrl.setToken(name, value);
 			_contentUrl.setToken(name, value);
+			_logoutUrl.setToken(name, value);
 		}
 		
 		protected function addEndpointCall(gatewayId:String, callId:String, availableState:String, endPoint:String, args:Array, url:IUrlProvider, desc:String = null, resultHandler:Function=null, urlTokens:Object=null, protocol:String=null):void
@@ -235,6 +241,7 @@ package social.dropbox
 			_oauthUrl.setToken(OAuth2.URL_ACCESS_TOKEN, _oauth.accessToken);
 			_callUrl.setToken(OAuth2.URL_ACCESS_TOKEN, _oauth.accessToken);
 			_contentUrl.setToken(OAuth2.URL_ACCESS_TOKEN, _oauth.accessToken);
+			_logoutUrl.setToken(OAuth2.URL_ACCESS_TOKEN, _oauth.accessToken);
 		}
 		
 		private function checkAuthUrl(url:String):Boolean{
