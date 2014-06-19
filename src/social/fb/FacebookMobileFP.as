@@ -144,7 +144,7 @@ class FacebookMobileAuth implements IAuth, IGateway
 	
 	public function set accessToken(value:String):void
 	{
-		vat tokenWas:String = _accessToken;
+		var tokenWas:String = _accessToken;
 		_accessToken = value;
 		_tokenTested = false;
 		if(!value && _pendingAuth){
