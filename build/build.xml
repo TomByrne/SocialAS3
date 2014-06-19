@@ -22,9 +22,8 @@
 			<source-path path-element="${MAIN_DIR}/src" />
 			<include-sources dir="${MAIN_DIR}/src" includes="*"/>
 			
-			<compiler.include-libraries dir="${MAIN_DIR}/libs" append="true">
-                <include name="signals.swc" />
-            </compiler.include-libraries>
+			<external-library-path dir="${MAIN_DIR}/libs" includes="*.swc" append="true"/>
+			<external-library-path dir="${MAIN_DIR}/build/libs" includes="*.swc" append="true"/>
 
 			<jvmarg value="-Xmx1024m"/>
 		</compc>

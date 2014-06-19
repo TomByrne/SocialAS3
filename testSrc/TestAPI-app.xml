@@ -15,14 +15,14 @@
 
 	<!-- A universally unique application identifier. Must be unique across all AIR applications.
 	Using a reverse DNS-style name as the id is recommended. (Eg. com.example.ExampleApplication.) Required. -->
-	<id>TestAPI</id>
+	<id>SocialAS3</id>
 
 	<!-- Used as the filename for the application. Required. -->
-	<filename>TestAPI</filename>
+	<filename>SocialAS3</filename>
 
 	<!-- The name that is displayed in the AIR application installer. 
 	May have multiple values for each language. See samples or xsd schema file. Optional. -->
-	<name>TestAPI</name>
+	<name>SocialAS3</name>
 	
 	<!-- A string value of the format <0-999>.<0-999>.<0-999> that represents application version which can be used to check for application upgrade. 
 	Values can also be 1-part or 2-part. It is not necessary to have a 3-part value.
@@ -89,11 +89,7 @@
 
         <!-- The aspect ratio of the app ("portrait" or "landscape" or "any"). Optional. Mobile only. Default is the natural orientation of the device -->
 
-        <!-- <aspectRatio></aspectRatio> -->
-
-        <!-- Whether the app will begin auto-orienting on launch. Optional. Mobile only. Default false -->
-
-        <!-- <autoOrients></autoOrients> -->
+        <aspectRatio>landscape</aspectRatio>
 
         <!-- Whether the app launches in full screen. Optional. Mobile only. Default false -->
 
@@ -111,7 +107,7 @@
 
 		<!-- Display Resolution for the app (either "standard" or "high"). Optional, OSX-only. Default "standard" -->
 		<!-- <requestedDisplayResolution></requestedDisplayResolution> -->
-	<autoOrients>false</autoOrients>
+		<autoOrients>false</autoOrients>
         <fullScreen>false</fullScreen>
         <visible>true</visible>
     </initialWindow>
@@ -242,6 +238,15 @@
 				<uses-permission android:name="android.permission.INTERNET"/>
 				<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 				<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+			    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+			    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+			    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+			    <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
+			    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+			    <uses-permission android:name="android.permission.CAMERA"/>
+			    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+			    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+			    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 				<uses-feature android:required="true" android:name="android.hardware.touchscreen.multitouch"/>
 				<application android:enabled="true">
 					<activity android:excludeFromRecents="false">
@@ -261,4 +266,54 @@
     <!-- </android> -->
 	<!-- End of the schema for adding the android specific tags in AndroidManifest.xml file -->
 
+<android>
+        <manifestAdditions><![CDATA[
+			<manifest android:installLocation="auto">
+			    <uses-permission android:name="android.permission.INTERNET"/>
+			    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+			    <application>
+			    	<activity android:name="com.facebook.LoginActivity"/>
+			    	<activity android:name="com.distriqt.extension.facebookapi.FacebookAPILoginActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"></activity>
+			    	<activity android:name="com.distriqt.extension.facebookapi.FacebookAPIDialogActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
+			    	
+			    	<intent-filter>
+      					<action android:name="android.intent.action.MAIN" />
+      					<category android:name="android.intent.category.LAUNCHER" />
+				    </intent-filter>
+				    
+				    <!-- IMPORTANT: Do not remove the backslash and space at the beginning of the following value string. -->
+			    	<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="\ 262050547226244"/>
+			    	<provider android:authorities="com.facebook.app.NativeAppCallContentProvider262050547226244" android:name="com.facebook.NativeAppCallContentProvider" />
+			    </application>
+			</manifest>
+			
+		]]></manifestAdditions>
+    </android>
+    <iPhone>
+        <InfoAdditions><![CDATA[
+			<key>UIDeviceFamily</key>
+			<array>
+				<string>1</string>
+				<string>2</string>
+			</array>
+			
+	        <key>CFBundleURLTypes</key>
+	        <array>
+	            <dict>
+	                <key>CFBundleURLSchemes</key>
+	                    <array>
+	                        <string>fb262050547226244</string>
+	                    </array>
+	            </dict>
+	        </array>
+	        
+	        <key>FacebookAppID</key>
+	        <string>262050547226244</string>
+		]]></InfoAdditions>
+        <requestedDisplayResolution>high</requestedDisplayResolution>
+    </iPhone>
+<extensions>
+        <extensionID>com.freshplanet.AirFacebook</extensionID>
+    <extensionID>com.distriqt.FacebookAPI</extensionID>
+    </extensions>
 </application>

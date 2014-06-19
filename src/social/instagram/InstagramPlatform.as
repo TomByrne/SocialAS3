@@ -1,5 +1,6 @@
 package social.instagram
 {
+	import social.social;
 	import social.auth.oauth2.OAuth2;
 	import social.core.IUrlProvider;
 	import social.core.Platform;
@@ -16,6 +17,8 @@ package social.instagram
 
 	public class InstagramPlatform extends Platform
 	{
+		use namespace social;
+		
 		public static const URL_CLIENT_ID				:String		= "${clientId}";
 		public static const URL_REDIRECT_URL			:String		= "${redirectUrl}";
 		private static const URL_PERMISSIONS			:String		= "${permissions}";

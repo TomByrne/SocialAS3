@@ -4,6 +4,7 @@ package social.core
 	
 	import org.osflash.signals.Signal;
 	
+	import social.social;
 	import social.auth.IAuth;
 	import social.auth.TokenSaver;
 	import social.desc.ArgDesc;
@@ -17,6 +18,7 @@ package social.core
 
 	public class Platform
 	{
+		use namespace social;
 
 		protected static function a(name:String, desc:String, optional:Boolean=false, def:*=null, type:Class = null):ArgDesc{
 			return new ArgDesc(name, desc, optional, def, type);
@@ -112,13 +114,13 @@ package social.core
 		}
 		
 		
-		protected function addGateway(id:String, gateway:IGateway):void
+		social function addGateway(id:String, gateway:IGateway):void
 		{
 			_gateways[id] = gateway;
 			if(_webView)gateway.setWebView(_webView);
 		}
 		
-		protected function addCall(gatewayId:String, callId:String, availableState:String, args:Array, url:IUrlProvider, desc:String = null, resultHandler:Function=null, urlTokens:Object=null, protocol:String=null):void
+		social function addCall(gatewayId:String, callId:String, availableState:String, args:Array, url:IUrlProvider, desc:String = null, resultHandler:Function=null, urlTokens:Object=null, protocol:String=null):void
 		{
 			if(urlTokens){
 				var proxy:UrlProxy = new UrlProxy(url);

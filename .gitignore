@@ -3,3 +3,5 @@
 /bin-release/SocialAS3.swc
 /bin-release
 /build/cert.p12
+/libs/*.ane
+/bin-debug

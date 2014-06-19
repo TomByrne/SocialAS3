@@ -8,9 +8,12 @@ package
 	import com.bit101.components.Text;
 	import com.bit101.components.TextArea;
 	import com.bit101.components.VBox;
+	import com.distriqt.extension.facebookapi.base.hurlant.util.Base64;
 	
 	import flash.display.DisplayObject;
 	import flash.display.Sprite;
+	import flash.display.StageAlign;
+	import flash.display.StageScaleMode;
 	import flash.events.Event;
 	import flash.geom.Rectangle;
 	import flash.text.TextFormat;
@@ -22,19 +25,23 @@ package
 	import propEditors.DefaultPropEditor;
 	import propEditors.IPropEditor;
 	
+	import social.social;
 	import social.core.Platform;
 	import social.desc.ArgDesc;
 	import social.desc.CallDesc;
 	import social.dropbox.DropboxPlatform;
+	import social.fb.Facebook;
+	import social.fb.FacebookMobileDistriqt;
+	import social.fb.FacebookMobileFP;
 	import social.fb.FacebookPermissions;
-	import social.fb.FacebookPlatform;
 	import social.instagram.InstagramPlatform;
 	import social.util.closure;
 	import social.web.StageWebViewProxy;
 	
-	[SWF(width='1200', height='800', backgroundColor='#ffffff', frameRate='30')]
+	[SWF(width='1280', height='740', backgroundColor='#ffffff', frameRate='30')]
 	public class TestAPI extends Sprite
 	{
+		use namespace social;
 		
 		static private const DEFAULT_EDITOR:Class = DefaultPropEditor;
 		static private var EDITOR_MAP:Dictionary;{
@@ -65,6 +72,10 @@ package
 		
 		public function TestAPI()
 		{
+			// support autoOrients
+			//stage.align = StageAlign.TOP_LEFT;
+			//stage.scaleMode = StageScaleMode.NO_SCALE;
+			
 			_platforms = [];
 			
 			_webView = new StageWebViewProxy(stage, new Rectangle(0,20,stage.stageWidth, stage.stageHeight-20));
@@ -89,10 +100,19 @@ package
 			
 			_callCont = new VBox(_mainCont, 0, 30);
 			
-			var facebook:FacebookPlatform	= new FacebookPlatform([FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox]);
+			/*var facebook:FacebookPlatform	= new FacebookPlatform([FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox]);
 			facebook.setProp(FacebookPlatform.URL_CLIENT_ID, "262050547226244");
 			facebook.setProp(FacebookPlatform.URL_REDIRECT_URL, "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
-			addPlatform(facebook);
+			addPlatform(facebook);*/
+			
+			/*var key:String = "YOUR_DISTRIQT_DEV_KEY";
+			var facebookMobile:FacebookMobileDistriqt = new FacebookMobileDistriqt(key, [FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox]);
+			facebookMobile.init("262050547226244", "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
+			addPlatform(facebookMobile.platform);*/
+			
+			var facebook:Facebook = new Facebook([FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox]);
+			facebook.init("262050547226244", "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
+			addPlatform(facebook.platform);
 			
 			var dropbox:DropboxPlatform	= new DropboxPlatform();
 			dropbox.setProp(DropboxPlatform.URL_CLIENT_ID, "56je6nzxitw1avr");

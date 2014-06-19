@@ -2,6 +2,7 @@ package social.dropbox
 {
 	import flash.net.URLLoaderDataFormat;
 	
+	import social.social;
 	import social.auth.oauth2.OAuth2;
 	import social.core.IUrlProvider;
 	import social.core.Platform;
@@ -25,6 +26,8 @@ package social.dropbox
 
 	public class DropboxPlatform extends Platform
 	{
+		use namespace social;
+		
 		public static const URL_LOCALE					:String		= "${locale}";
 		public static const URL_CLIENT_ID				:String		= "${clientId}";
 		public static const URL_REDIRECT_URL			:String		= "${redirectUrl}";
@@ -48,6 +51,7 @@ package social.dropbox
 		public static const CALL_SEARCH					:String		= "search";
 		public static const CALL_GET_SHARE_LINK			:String		= "getShareLink";
 		public static const CALL_GET_COPY_REF			:String		= "getCopyRef";
+		public static const CALL_GET_MEDIA				:String		= "getMedia";
 		public static const CALL_GET_THUMBNAILS			:String		= "getThumbnail";
 		
 		
@@ -192,6 +196,10 @@ package social.dropbox
 				argRoot, argFilePath,
 				a("short_url", "When true (default), the url returned will be shortened using the Dropbox url shortener. If false, the url will link directly to the file's preview page.", true )
 			], _callUrl, "Creates and returns a Dropbox link to files or folders users can use to view a preview of the file in a web browser.", onShareLink);
+			
+			addEndpointCall(GATEWAY_JSON, CALL_GET_MEDIA, s3, "media/${root}/${filePath}", [
+				argRoot, argFilePath
+			], _callUrl, "Returns a link directly to a file.\nSimilar to /shares. The difference is that this bypasses the Dropbox webserver, used to provide a preview of the file, so that you can effectively stream the contents of your media.", onShareLink);
 			
 			addEndpointCall(GATEWAY_JSON, CALL_GET_COPY_REF, s3, "copy_ref/${root}/${filePath}", [
 				argRoot, argFilePath
