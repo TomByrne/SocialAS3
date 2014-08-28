@@ -6,11 +6,33 @@ package social.web
 	import flash.events.LocationChangeEvent;
 	import flash.geom.Rectangle;
 	import flash.media.StageWebView;
+	import flash.utils.Dictionary;
+	
+	import mx.resources.ResourceBundle;
 	
 	import org.osflash.signals.Signal;
 
 	public class StageWebViewProxy implements IWebView
 	{
+		private var importResourceBundle:ResourceBundle; // to force inclusion in SWC
+		
+		[Embed(source="../../../embed/injection.js",mimeType="application/octet-stream")]
+		private static const INJECTION_CLASS:Class;
+		private static var INJECTION:String;
+		{
+			INJECTION = new INJECTION_CLASS();
+		}
+		
+		private static const COMMUNICATION_PROTOCOL:String = "adobe-air-comm:";
+		private static const COMMUNICATION_DELIMITER:String = "|";
+		
+		public static var consoleLog:Function = function():void{
+			trace.apply(null, ["console.log: "].concat(arguments));
+		}
+		public static var windowOnError:Function = function():void{
+			trace.apply(null, ["window.onerror: "].concat(arguments));
+		}
+		
 		public function get loadComplete():Signal{
 			if(!_loadComplete)_loadComplete = new Signal();
 			return _loadComplete;
@@ -55,6 +77,14 @@ package social.web
 			return _isPopulated;
 		}
 		
+		public function get isHistoryBackEnabled():Boolean{
+			return _webView.isHistoryBackEnabled;
+		}
+		
+		public function get isHistoryForwardEnabled():Boolean{
+			return _webView.isHistoryForwardEnabled;
+		}
+		
 		private var _stage:Stage;
 		private var _webView:StageWebView;
 		private var _isLoading:Boolean;
@@ -67,21 +97,101 @@ package social.web
 		private var _locationChanged:Signal;
 		private var _isLoadingChanged:Signal;
 		private var _isPopulatedChanged:Signal;
+		private var _callMap:Dictionary;
 		
 		public function StageWebViewProxy(stage:Stage=null, viewPort:Rectangle=null){
 			_stage = stage;
 			_webView = new StageWebView();
 			if(viewPort)this.viewPort = viewPort;
 			
+			
 			_webView.addEventListener( Event.COMPLETE, onLoadSuccess );
 			_webView.addEventListener(ErrorEvent.ERROR, onLoadError);
 			_webView.addEventListener(LocationChangeEvent.LOCATION_CHANGING, onLocationChange);
 		}
 		
+		public function historyBack():void{
+			_webView.historyBack();
+		}
+		
+		public function historyForward():void{
+			_webView.historyForward();
+		}
+		
+		private function clearHistory():void{
+			if(_webView.isHistoryBackEnabled || _webView.isHistoryForwardEnabled){
+				var stage:Stage = _webView.stage;
+				var viewport:Rectangle = _webView.viewPort;
+				_webView.dispose();
+				_webView.removeEventListener( Event.COMPLETE, onLoadSuccess );
+				_webView.removeEventListener(ErrorEvent.ERROR, onLoadError);
+				_webView.removeEventListener(LocationChangeEvent.LOCATION_CHANGING, onLocationChange);
+				_webView = null;
+				
+				_webView = new StageWebView();
+				_webView.viewPort = viewport;
+				_webView.stage = stage;
+				_webView.addEventListener( Event.COMPLETE, onLoadSuccess );
+				_webView.addEventListener(ErrorEvent.ERROR, onLoadError);
+				_webView.addEventListener(LocationChangeEvent.LOCATION_CHANGING, onLocationChange);
+				
+				setIsPopulated(false);
+				setIsLoading(false);	
+			}
+		}
+		
+		public function mapCall(name:String, method:Function):void{
+			if(!_callMap){
+				_callMap = new Dictionary();
+				if(_location)setupComm();
+			}
+			_callMap[name] = method;
+		}
+		
+		public function redirectConsole():void{
+			mapCall("console.log", consoleLog);
+		}
+		
+		public function redirectErrors():void{
+			mapCall("window.onerror", windowOnError);
+		}
+		
 		protected function onLocationChange(event:LocationChangeEvent):void
 		{
 			if(_ignoreChanges)return;
+			
 			_lastEvent = event;
+			if(event.location.indexOf(COMMUNICATION_PROTOCOL)==0){
+				// recieved communication
+				var args:Array = decodeURI(event.location.substr(COMMUNICATION_PROTOCOL.length)).split(COMMUNICATION_DELIMITER);
+				var method:String = args.shift();
+				var call:Function = _callMap[method];
+				if(call==null){
+					trace("No call mapped for "+method+" call from StageWebView");
+				}else{
+					for(var i:int=0; i<args.length; ++i){
+						var arg:String = args[i];
+						if(arg=="true"){
+							args[i] = true;
+						}else if(arg=="false"){
+							args[i] = false;
+						}else{
+							var firstChar:String = arg.charAt(0);
+							var num:Number;
+							if(firstChar=="[" || firstChar=="{"){
+								args[i] = JSON.parse(arg);
+							}else if((num = parseFloat(arg)).toString()==arg){
+								args[i] = num;
+							} // else is string
+						}
+					}
+					call.apply(null, args);
+				}
+				
+				cancelLocationChange();
+				return;
+			}
+			
 			_location = event.location;
 			if(_locationChanged)_locationChanged.dispatch(cancelLocationChange);
 		}
@@ -110,9 +220,21 @@ package social.web
 			if(_isLoading)_webView.stage = stage;
 			setIsLoading(false);
 			_loadComplete.dispatch(true, null);
+			
+			if(_callMap)setupComm();
 		}
 		
-		public function showView(url:String, showImmediately:Boolean):void{
+		private function setupComm():void
+		{
+			_webView.loadURL("javascript:"+INJECTION);
+			_webView.loadURL("javascript:setupComm('"+COMMUNICATION_PROTOCOL+"','"+COMMUNICATION_DELIMITER+"')");
+			if(_callMap["console.log"])_webView.loadURL("javascript:redirectConsole()");
+			if(_callMap["window.onerror"])_webView.loadURL("javascript:redirectErrors()");
+		}
+		
+		public function showView(url:String, showImmediately:Boolean, clearHistory:Boolean = false):void{
+			if(clearHistory)this.clearHistory();
+			
 			_location = null;
 			setIsPopulated(true);
 			setIsLoading(true);			

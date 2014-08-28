@@ -85,7 +85,7 @@ package social.auth.oauth2
 			trace("oauth2 - "+url);
 			_webView.loadComplete.add(onLoadComplete);
 			_webView.locationChanged.add(onLocationChanged);
-			_webView.showView(url, showImmediately);
+			_webView.showView(url, showImmediately, true);
 		}
 		public function cancelAuth():void
 		{
@@ -166,7 +166,7 @@ package social.auth.oauth2
 						if(!_showImmediately){
 							_webView.hideView();
 						}
-						_webView.showView(_urlProvider.url, _showImmediately);
+						_webView.showView(_urlProvider.url, _showImmediately, true);
 					}
 				}
 			}

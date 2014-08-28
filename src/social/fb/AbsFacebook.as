@@ -67,6 +67,9 @@ package social.fb
 		public function logout(onComplete:Function=null):void{
 			_platform.doCall(FacebookPlatform.CALL_LOGOUT, {}, onComplete);
 		}
+		public function revokePermissions(onComplete:Function=null):void{
+			_platform.doCall(FacebookPlatform.CALL_LOGOUT, {}, onComplete);
+		}
 		
 		
 		public function getSelf( onComplete:Function=null):void{

@@ -255,7 +255,8 @@ package social.dropbox
 		private function checkAuthUrl(url:String):Boolean{
 			return (
 				url.indexOf("dropbox.com")==-1 || // allows for redirect URL
-				url.indexOf("https://www.dropbox.com/1/oauth2/authorize")!=-1
+				url.indexOf("https://www.dropbox.com/1/oauth2/authorize")!=-1 ||
+				url.indexOf("https://www.dropbox.com/forgot")!=-1
 			);
 		}
 	}

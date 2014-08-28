@@ -79,6 +79,8 @@ package
 			_platforms = [];
 			
 			_webView = new StageWebViewProxy(stage, new Rectangle(0,20,stage.stageWidth, stage.stageHeight-20));
+			_webView.redirectConsole(); 
+			_webView.redirectErrors();
 			
 			_mainCont = new HBox(this, 0, 0);
 			
@@ -111,7 +113,7 @@ package
 			addPlatform(facebookMobile.platform);*/
 			
 			var facebook:Facebook = new Facebook([FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox]);
-			facebook.init("262050547226244", "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
+			facebook.init("262050547226244", "http://devmobile.whitechimagine.com/imagine/mobile_redirect.php");
 			addPlatform(facebook.platform);
 			
 			var dropbox:DropboxPlatform	= new DropboxPlatform();

@@ -113,7 +113,7 @@ class FacebookMobileAuth implements IAuth, IGateway
 		if(onComplete!=null)_onCompletes.push(onComplete);
 		
 		_pendingAuth = true;
-		_facebookMobile.createSession(_permissions, true, true);
+		_facebookMobile.createSession(_permissions, true, false);
 		
 	}
 	private function session_openedHandler(e:FacebookAPIEvent):void
@@ -170,7 +170,9 @@ class FacebookMobileAuth implements IAuth, IGateway
 			cancelAuth();
 			_pendingAuth = false;
 		}
-		if(!value && _facebookMobile.isSessionOpen())_facebookMobile.closeSession(true);
+		if(!value && _facebookMobile.isSessionOpen()){
+			_facebookMobile.closeSession(true);
+		}
 		if(_accessTokenChanged)_accessTokenChanged.dispatch();
 	}
 	
