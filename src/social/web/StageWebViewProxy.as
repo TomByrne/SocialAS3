@@ -78,7 +78,7 @@ package social.web
 		}
 		
 		public function get isHistoryBackEnabled():Boolean{
-			return _webView.isHistoryBackEnabled;
+			return _hasBackOverride || _webView.isHistoryBackEnabled;
 		}
 		
 		public function get isHistoryForwardEnabled():Boolean{
@@ -92,6 +92,7 @@ package social.web
 		private var _isPopulated:Boolean;
 		private var _location:String;
 		private var _lastEvent:LocationChangeEvent;
+		private var _hasBackOverride:Boolean;
 		
 		private var _loadComplete:Signal;
 		private var _locationChanged:Signal;
@@ -119,7 +120,7 @@ package social.web
 		}
 		
 		private function clearHistory():void{
-			if(_webView.isHistoryBackEnabled || _webView.isHistoryForwardEnabled){
+			if(isHistoryBackEnabled || isHistoryForwardEnabled){
 				var stage:Stage = _webView.stage;
 				var viewport:Rectangle = _webView.viewPort;
 				_webView.dispose();
@@ -135,6 +136,7 @@ package social.web
 				_webView.addEventListener(ErrorEvent.ERROR, onLoadError);
 				_webView.addEventListener(LocationChangeEvent.LOCATION_CHANGING, onLocationChange);
 				
+				_hasBackOverride = false;
 				setIsPopulated(false);
 				setIsLoading(false);	
 			}
@@ -248,6 +250,7 @@ package social.web
 			setIsLoading(false);
 			_ignoreChanges = true;
 			_webView.loadString("<html></html>"); // clears the view for reuse
+			_hasBackOverride = true;
 			_ignoreChanges = false;
 		}
 		
