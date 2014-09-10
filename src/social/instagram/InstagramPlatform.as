@@ -8,6 +8,7 @@ package social.instagram
 	import social.core.UrlProvider;
 	import social.desc.ArgDesc;
 	import social.gateway.HttpLoader;
+	import social.gateway.WebViewGateway;
 	import social.instagram.vo.Location;
 	import social.instagram.vo.Photo;
 	import social.instagram.vo.PhotoSize;
@@ -25,6 +26,7 @@ package social.instagram
 		
 		private static const GATEWAY_OAUTH				:String		= "oauth";
 		private static const GATEWAY_JSON				:String		= "json";
+		private static const GATEWAY_WEBVIEW			:String		= "webview";
 		
 		public static const CALL_AUTH					:String		= "auth";
 		public static const CALL_LOGOUT					:String		= "logout";
@@ -61,7 +63,6 @@ package social.instagram
 		private var _logoutUrl:UrlProvider;
 		
 		private var _oauth:OAuth2;
-		private var _jsonRest:HttpLoader;
 		private var _webView:StageWebViewProxy;
 		
 		public function InstagramPlatform(){
@@ -101,14 +102,14 @@ package social.instagram
 			_callUrl = new UrlProvider(true, API_URL);
 			_logoutUrl = new UrlProvider(true, LOGOUT_URL);
 			
-			_oauth = new OAuth2(checkAuthUrl);
+			_oauth = new OAuth2(checkAuthUrl, null, checkErrorUrl);
 			_oauth.accessTokenChanged.add(onTokenChanged);
 			super("Instagram_v1", _oauth);
 			
 			addGateway(GATEWAY_OAUTH, _oauth);
 			
-			_jsonRest = new HttpLoader(_oauth);
-			addGateway(GATEWAY_JSON, _jsonRest);
+			addGateway(GATEWAY_JSON,    new HttpLoader(_oauth));
+			addGateway(GATEWAY_WEBVIEW, new WebViewGateway());
 			
 			addProp(URL_CLIENT_ID, "Instagram application client ID", false);
 			addProp(URL_REDIRECT_URL, "Instagram application redirect URL", false);
@@ -129,7 +130,7 @@ package social.instagram
 			var s3:String = PlatformState.STATE_AUTHENTICATED;
 			
 			addCall(GATEWAY_OAUTH, CALL_AUTH, s1, [showImmediately], _oauthUrl, "Revives session  if possible, otherwise displays login view.", null, {doAuth:true});
-			addEndpointCall(GATEWAY_JSON, CALL_LOGOUT, s3, "accounts/logout/", [], _logoutUrl, "Deauthenticate user", onLogout);
+			addEndpointCall(GATEWAY_WEBVIEW, CALL_LOGOUT, s3, "accounts/logout/", [], _logoutUrl, "Deauthenticate user", onLogout);
 			
 			addEndpointCall(GATEWAY_JSON, CALL_GET_FEED, s3, "users/self/feed/", [count, minId, maxId], _callUrl, "Get current user's feed.", onPhotos);
 			addEndpointCall(GATEWAY_JSON, CALL_GET_USER, s3, "users/${userID}/", [userId], _callUrl, "Gets a user's info.", onUser);
@@ -182,9 +183,17 @@ package social.instagram
 		private function checkAuthUrl(url:String):Boolean{
 			return (
 				url.indexOf("instagram.com")==-1 || // allows for redirect URL
+				url.indexOf("facebook.com")!=-1 || // allows for facebook auth URLs
 				url.indexOf("instagram.com/accounts/login")!=-1 ||
 				url.indexOf("instagram.com/accounts/password")!=-1 ||
 				url.indexOf("instagram.com/oauth")!=-1
+			);
+		}
+		
+		private function checkErrorUrl(url:String):Boolean{
+			return (
+				url.indexOf("facebook.com")==-1 && // allows for facebook auth URLs
+				OAuth2.ERROR_SEARCHER_PATTERN.exec(url)!=null
 			);
 		}
 	}

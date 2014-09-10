@@ -57,6 +57,4 @@ var redirectErrors = function(includeErrors){
 	}, 1000);
 
 	addErrorHandler(window, handler);
-
-	throw new Error("WHAT THE FUCK");
 }

@@ -37,6 +37,10 @@ package social.web
 			if(!_loadComplete)_loadComplete = new Signal();
 			return _loadComplete;
 		}
+		public function get attemptLocationChange():Signal{
+			if(!_attemptLocationChange)_attemptLocationChange = new Signal();
+			return _attemptLocationChange;
+		}
 		public function get locationChanged():Signal{
 			if(!_locationChanged)_locationChanged = new Signal();
 			return _locationChanged;
@@ -66,7 +70,7 @@ package social.web
 		}
 		public function set stage(value:Stage):void{
 			_stage = value;
-			if(_webView.stage || (_isPopulated || !_isLoading))_webView.stage = value;
+			if(_webView.stage || _shown)_webView.stage = value;
 		}
 		
 		public function get isLoading():Boolean{
@@ -85,6 +89,17 @@ package social.web
 			return _webView.isHistoryForwardEnabled;
 		}
 		
+		private var _shown:Boolean;
+
+		public function get shown():Boolean{
+			return _shown;
+		}
+		public function set shown(value:Boolean):void{
+			_shown = value;
+			if(_shown)_webView.stage = _stage;
+		}
+
+		
 		private var _stage:Stage;
 		private var _webView:StageWebView;
 		private var _isLoading:Boolean;
@@ -96,6 +111,7 @@ package social.web
 		
 		private var _loadComplete:Signal;
 		private var _locationChanged:Signal;
+		private var _attemptLocationChange:Signal;
 		private var _isLoadingChanged:Signal;
 		private var _isPopulatedChanged:Signal;
 		private var _callMap:Dictionary;
@@ -113,6 +129,7 @@ package social.web
 		
 		public function historyBack():void{
 			_webView.historyBack();
+			_hasBackOverride = false;
 		}
 		
 		public function historyForward():void{
@@ -160,6 +177,7 @@ package social.web
 		
 		protected function onLocationChange(event:LocationChangeEvent):void
 		{
+			if(_attemptLocationChange)_attemptLocationChange.dispatch();
 			if(_ignoreChanges)return;
 			
 			_lastEvent = event;
@@ -219,7 +237,6 @@ package social.web
 		protected function onLoadSuccess(event:Event):void{
 			_location = null;
 			if(_ignoreChanges || !_isPopulated)return;
-			if(_isLoading)_webView.stage = stage;
 			setIsLoading(false);
 			_loadComplete.dispatch(true, null);
 			
@@ -234,16 +251,15 @@ package social.web
 			if(_callMap["window.onerror"])_webView.loadURL("javascript:redirectErrors()");
 		}
 		
-		public function showView(url:String, showImmediately:Boolean, clearHistory:Boolean = false):void{
+		public function load(url:String, clearHistory:Boolean = false):void{
 			if(clearHistory)this.clearHistory();
 			
 			_location = null;
 			setIsPopulated(true);
 			setIsLoading(true);			
 			_webView.loadURL(url);
-			if(showImmediately)_webView.stage = _stage;
 		}
-		public function hideView():void{
+		public function clearView():void{
 			_location = null;
 			setIsPopulated(false);
 			_webView.stage = null;
@@ -252,6 +268,7 @@ package social.web
 			_webView.loadString("<html></html>"); // clears the view for reuse
 			_hasBackOverride = true;
 			_ignoreChanges = false;
+			_shown = false;
 		}
 		
 		private function setIsLoading(value:Boolean):void

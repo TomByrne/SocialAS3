@@ -12,7 +12,11 @@ package social.auth.oauth2
 	{
 		public static const URL_ACCESS_TOKEN			:String		= "${accessToken}";
 		public static const TOKEN_SEARCHER				:RegExp		= /access_token=([\d\w\.\-_]*)/;
-		public static const ERROR_SEARCHER				:RegExp		= /error=([\d\w\.\-_]*)/;
+		
+		public static const ERROR_SEARCHER_PATTERN		:RegExp		= /error=([\d\w\.\-_]*)/;
+		public static const ERROR_SEARCHER				:Function	= function(url:String):Boolean{
+			return ERROR_SEARCHER_PATTERN.exec(url)!=null;
+		}
 		
 		public function get accessTokenChanged():Signal{
 			if(!_accessTokenChanged)_accessTokenChanged = new Signal();
@@ -22,7 +26,7 @@ package social.auth.oauth2
 		private var _urlProvider			:IUrlProvider;
 		
 		private var _tokenSearcher			:RegExp;
-		private var _errorSearcher			:RegExp;
+		private var _errorSearcher			:Function;
 		private var _accessToken			:String;
 		private var _accessTokenChanged		:Signal;
 		
@@ -36,7 +40,7 @@ package social.auth.oauth2
 		private var _showImmediately:Boolean;
 		
 		
-		public function OAuth2(urlScopeChecker:Function, tokenSearcher:RegExp=null, errorSearcher:RegExp=null)
+		public function OAuth2(urlScopeChecker:Function, tokenSearcher:RegExp=null, errorSearcher:Function=null)
 		{
 			_urlScopeChecker = urlScopeChecker;
 			_tokenSearcher = tokenSearcher || TOKEN_SEARCHER;
@@ -85,7 +89,8 @@ package social.auth.oauth2
 			trace("oauth2 - "+url);
 			_webView.loadComplete.add(onLoadComplete);
 			_webView.locationChanged.add(onLocationChanged);
-			_webView.showView(url, showImmediately, true);
+			_webView.load(url, true);
+			if(_showImmediately)_webView.shown = true;
 		}
 		public function cancelAuth():void
 		{
@@ -154,20 +159,18 @@ package social.auth.oauth2
 				cleanupAuth();
 				callComplete(true, null);
 			}else{
-				res = _errorSearcher.exec(location);
-				
-				if(res || _urlScopeChecker==null){
+				if(_errorSearcher(location) || _urlScopeChecker==null){
 					cancelAuth();
 				}
 				else if(!_urlScopeChecker(location)){
 					if(cancelHandler!=null){
 						cancelHandler();
 					}else{
-						if(!_showImmediately){
-							_webView.hideView();
-						}
-						_webView.showView(_urlProvider.url, _showImmediately, true);
+						_webView.load(_urlProvider.url, true);
+						_webView.shown = _showImmediately;
 					}
+				}else{
+					_webView.shown = true;
 				}
 			}
 		}
@@ -175,8 +178,9 @@ package social.auth.oauth2
 		private function cleanupAuth():void
 		{
 			_webView.loadComplete.remove(onLoadComplete);
+			_webView.locationChanged.remove(onLocationChanged);
 			_pendingAuth = false;
-			_webView.hideView();
+			_webView.clearView();
 		}
 		
 		public function markTokenWorks():void

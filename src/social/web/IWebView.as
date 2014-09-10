@@ -13,8 +13,11 @@ package social.web
 		function get isPopulated():Boolean;
 		function get isPopulatedChanged():Signal;
 		
-		function showView(url:String, showImmediately:Boolean, clearHistory:Boolean = false):void;
-		function hideView():void;
+		function get shown():Boolean;
+		function set shown(value:Boolean):void;
+		
+		function load(url:String, clearHistory:Boolean = false):void;
+		function clearView():void;
 		
 		function get location():String;
 	}
