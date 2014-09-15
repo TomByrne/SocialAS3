@@ -7,6 +7,7 @@ package social.web
 	import flash.geom.Rectangle;
 	import flash.media.StageWebView;
 	import flash.utils.Dictionary;
+	import flash.utils.setTimeout;
 	
 	import mx.resources.ResourceBundle;
 	
@@ -115,12 +116,14 @@ package social.web
 		private var _isLoadingChanged:Signal;
 		private var _isPopulatedChanged:Signal;
 		private var _callMap:Dictionary;
+		private var _lastEvalId:int = 0;
+		private var _responseHandlers:Dictionary;
 		
 		public function StageWebViewProxy(stage:Stage=null, viewPort:Rectangle=null){
 			_stage = stage;
 			_webView = new StageWebView();
 			if(viewPort)this.viewPort = viewPort;
-			
+			_responseHandlers = new Dictionary();
 			
 			_webView.addEventListener( Event.COMPLETE, onLoadSuccess );
 			_webView.addEventListener(ErrorEvent.ERROR, onLoadError);
@@ -184,10 +187,11 @@ package social.web
 			if(event.location.indexOf(COMMUNICATION_PROTOCOL)==0){
 				// recieved communication
 				var args:Array = decodeURI(event.location.substr(COMMUNICATION_PROTOCOL.length)).split(COMMUNICATION_DELIMITER);
-				var method:String = args.shift();
-				var call:Function = _callMap[method];
+				var id:String = args.shift();
+				
+				var call:Function = _responseHandlers[parseInt(id)] || _callMap[id];
 				if(call==null){
-					trace("No call mapped for "+method+" call from StageWebView");
+					trace("No call mapped for "+id+" call from StageWebView");
 				}else{
 					for(var i:int=0; i<args.length; ++i){
 						var arg:String = args[i];
@@ -269,6 +273,15 @@ package social.web
 			_hasBackOverride = true;
 			_ignoreChanges = false;
 			_shown = false;
+		}
+		public function eval(js:String, responseHandler:Function=null):void{
+			if(responseHandler){
+				var id:int = _lastEvalId++;
+				_responseHandlers[id] = responseHandler;
+				_webView.loadURL("javascript:window.location.href = '"+COMMUNICATION_PROTOCOL+id+COMMUNICATION_DELIMITER+"'+("+js+")");
+			}else{
+				_webView.loadURL("javascript:"+js);
+			}
 		}
 		
 		private function setIsLoading(value:Boolean):void

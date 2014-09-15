@@ -68,7 +68,7 @@ package social.fb
 		
 		protected static const AUTH_URL:String = "https://www.facebook.com/dialog/oauth?client_id="+URL_CLIENT_ID+"&redirect_uri="+URL_REDIRECT_URL+"&response_type=token&scope="+URL_PERMISSIONS;
 		protected static const API_URL:String = "https://graph.facebook.com/"+HttpLoader.URL_ENDPOINT+"?access_token="+OAuth2.URL_ACCESS_TOKEN;
-		protected static const LOGOUT_URL:String = "https://m.facebook.com/"+HttpLoader.URL_ENDPOINT+".php?confirm=1&access_token="+OAuth2.URL_ACCESS_TOKEN+"&next="+URL_REDIRECT_URL;
+		protected static const LOGOUT_URL:String = "https://m.facebook.com/"+HttpLoader.URL_ENDPOINT+".php?confirm=0&h="+OAuth2.URL_ACCESS_TOKEN+"&next="+URL_REDIRECT_URL;
 		
 		private var _oauthUrl:UrlProvider;
 		private var _callUrl:UrlProvider;

@@ -18,6 +18,7 @@ package social.web
 		
 		function load(url:String, clearHistory:Boolean = false):void;
 		function clearView():void;
+		function eval(js:String, responseHandler:Function=null):void;
 		
 		function get location():String;
 	}
