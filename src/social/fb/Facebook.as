@@ -5,10 +5,10 @@ package social.fb
 
 	public class Facebook extends AbsFacebook
 	{
-		public function Facebook(permissions:Array)
+		public function Facebook(permissions:Array, apiVersion:String=null, castObjects:Boolean=true)
 		{
 			
-			super("Facebook_v2", permissions);
+			super("Facebook", permissions, apiVersion, castObjects);
 			
 		}
 	}

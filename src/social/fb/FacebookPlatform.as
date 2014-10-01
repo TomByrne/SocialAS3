@@ -27,11 +27,14 @@ package social.fb
 	{
 		use namespace social;
 		
+		public static const DATE_PARSER					:Function	= DateParser.parser("%G-%m-%eT%H:%M:%S+%z", true);
+		
 		public static const URL_CLIENT_ID				:String		= "${clientId}";
 		public static const URL_REDIRECT_URL			:String		= "${redirectUrl}";
 		private static const URL_PERMISSIONS			:String		= "${permissions}";
 		public static const URL_OBJECT_ID				:String		= "${objectId}";
 		public static const URL_USER_ID					:String		= "${userId}";
+		private static const URL_API_VERSION			:String		= "${apiVersion}";
 		
 		social static const GATEWAY_OAUTH				:String		= "oauth";
 		social static const GATEWAY_JSON				:String		= "json";
@@ -67,7 +70,7 @@ package social.fb
 		social static const CALL_REMOVE_PERMISSIONS		:String		= "revokePermissions";
 		
 		protected static const AUTH_URL:String = "https://www.facebook.com/dialog/oauth?client_id="+URL_CLIENT_ID+"&redirect_uri="+URL_REDIRECT_URL+"&response_type=token&scope="+URL_PERMISSIONS;
-		protected static const API_URL:String = "https://graph.facebook.com/"+HttpLoader.URL_ENDPOINT+"?access_token="+OAuth2.URL_ACCESS_TOKEN;
+		protected static const API_URL:String = "https://graph.facebook.com/"+URL_API_VERSION+HttpLoader.URL_ENDPOINT+"?access_token="+OAuth2.URL_ACCESS_TOKEN;
 		protected static const LOGOUT_URL:String = "https://m.facebook.com/"+HttpLoader.URL_ENDPOINT+".php?confirm=0&h="+OAuth2.URL_ACCESS_TOKEN+"&next="+URL_REDIRECT_URL;
 		
 		private var _oauthUrl:UrlProvider;
@@ -76,77 +79,103 @@ package social.fb
 		
 		private var _webView:StageWebViewProxy;
 		
-		public function FacebookPlatform(name:String, permissions:Array, auth:IAuth=null){
+		public function FacebookPlatform(name:String, permissions:Array, apiVersion:String=null, castObjects:Boolean=true, auth:IAuth=null){
 			
-			var dateParser:Function = DateParser.parser("%G-%m-%eT%H:%M:%S+%z", true);
+			if(castObjects){
+				
+				var parseUser:Function = HttpLoader.createParser(User, {"updated_time":DATE_PARSER},
+					{"id":"id", "name":"name", "birthday":"birthday", "first_name":"firstName", 
+						"gender":"gender", "last_name":"lastName", "link":"link",
+						"locale":"locale", "timezone":"timezone", "updated_time":"updatedTime",
+						"username":"username", "verified":"verified"});
+				
+				var parseAlbum:Function = HttpLoader.createParser(Album, {"from":parseUser, "created_time":DATE_PARSER, "updated_time":DATE_PARSER},
+					{"id":"id", "can_upload":"canUpload", "count":"count", "cover_photo":"coverPhoto",
+						"created_time":"createdTime", "from":"from", "link":"link", "name":"name",
+						"privacy":"privacy", "type":"type", "updated_time":"updatedTime"});
+				
+				var parseImage:Function = HttpLoader.createParser(Image, null,
+					{"source":"source", "width":"width", "height":"height"});
+				
+				var parseNameTag:Function = HttpLoader.createParser(NameTag, null,
+					{"id":"id", "object":"object", "length":"length", "name":"name", "offset":"offset", "type":"type"});
+				
+				var parsePhoto:Function = HttpLoader.createParser(Photo, {"from":parseUser, "created_time":DATE_PARSER, "updated_time":DATE_PARSER, "backdated_time":DATE_PARSER,
+					"images":HttpLoader.createArrParser(parseImage), "name_tags":HttpLoader.createArrParser(parseNameTag)},
+					{"id":"id", "width":"width", "height":"height", "created_time":"createdTime",
+						"from":"from", "icon":"icon", "images":"imagesArr", "link":"link", "name":"name",
+						"picture":"picture", "source":"source", "updated_time":"updatedTime", "backdated_time":"backdatedTime",
+						"backdated_time_granularity":"backdatedTimeGranularity", "pageStoryId":"page_story_id", "place":"place", "name_tags":"nameTagsArr"});
+				
+				var parseProfPic:Function = HttpLoader.createParser(ProfilePicture, null,{"url":"url", "width":"width", "height":"height", "is_silhouette":"isSilhouette"});
+				
+				var parseLink:Function = HttpLoader.createParser(Photo, {"from":parseUser, "created_time":DATE_PARSER},
+					{"id":"id", "created_time":"createdTime", "description":"description", "from":"from",
+						"icon":"icon", "link":"link", "message":"message", "name":"name", "picture":"picture"});
+				
+				var parseComment:Function = HttpLoader.createParser(Comment, {"from":parseUser, "created_time":DATE_PARSER},
+					{"id":"id", "created_time":"createdTime", "message":"message", "from":"from"});
+				
+				var parseMessage:Function = HttpLoader.createParser(Message, {"from":parseUser, "created_time":DATE_PARSER, "updated_time":DATE_PARSER, "to":HttpLoader.createArrParser(parseUser)},
+					{"id":"id", "created_time":"createdTime", "to":"toArr", "comments.data":"commentsArr", "message":"message", "from":"from"});
+				
+				var parseThread:Function = HttpLoader.createParser(Thread, {"created_time":DATE_PARSER, "updated_time":DATE_PARSER, "to":HttpLoader.createArrParser(parseUser), "comments.data":HttpLoader.createArrParser(parseComment)},
+					{"id":"id", "created_time":"createdTime", "updated_time":"updatedTime", "to":"toArr", "comments.data":"commentsArr", "unread":"unread", "unseen":"unseen"});
 			
-			var parseUser:Function = HttpLoader.createParser(User, {"updated_time":dateParser},
-				{"id":"id", "name":"name", "birthday":"birthday", "first_name":"firstName", 
-					"gender":"gender", "last_name":"lastName", "link":"link",
-					"locale":"locale", "timezone":"timezone", "updated_time":"updatedTime",
-					"username":"username", "verified":"verified"});
+				var onUser:Function = HttpLoader.createHandler(parseUser);
+				var onUsers:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseUser), "data");
+				
+				var onAlbum:Function = HttpLoader.createHandler(parseAlbum);
+				var onAlbums:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseAlbum), "data");
+				
+				var onPhoto:Function = HttpLoader.createHandler(parsePhoto);
+				var onPhotos:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parsePhoto), "data");
+				
+				var onMessage:Function = HttpLoader.createHandler(parseMessage);
+				var onMessages:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseMessage), "data");
+				
+				var onThread:Function = HttpLoader.createHandler(parseThread);
+				var onThreads:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseThread), "data");
+				
+				var onProfPic:Function = HttpLoader.createHandler(parseProfPic, "data");
+				
+				var onLink:Function = HttpLoader.createHandler(parseLink);
+			}else{
+				var handler:Function = HttpLoader.createHandler();
+				onUser = handler;
+				onUsers = handler;
+				
+				onAlbum = handler;
+				onAlbums = handler;
+				
+				onPhoto = handler;
+				onPhotos = handler;
+				
+				onMessage = handler;
+				onMessages = handler;
+				
+				onThread = handler;
+				onThreads = handler;
+				
+				onProfPic = handler;
+				
+				onLink = handler;
+			}
 			
-			var parseAlbum:Function = HttpLoader.createParser(Album, {"from":parseUser, "created_time":dateParser, "updated_time":dateParser},
-				{"id":"id", "can_upload":"canUpload", "count":"count", "cover_photo":"coverPhoto",
-					"created_time":"createdTime", "from":"from", "link":"link", "name":"name",
-					"privacy":"privacy", "type":"type", "updated_time":"updatedTime"});
-			
-			var parseImage:Function = HttpLoader.createParser(Image, null,
-				{"source":"source", "width":"width", "height":"height"});
-			
-			var parseNameTag:Function = HttpLoader.createParser(NameTag, null,
-				{"id":"id", "object":"object", "length":"length", "name":"name", "offset":"offset", "type":"type"});
-			
-			var parsePhoto:Function = HttpLoader.createParser(Photo, {"from":parseUser, "created_time":dateParser, "updated_time":dateParser, "backdated_time":dateParser,
-				"images":HttpLoader.createArrParser(parseImage), "name_tags":HttpLoader.createArrParser(parseNameTag)},
-				{"id":"id", "width":"width", "height":"height", "created_time":"createdTime",
-					"from":"from", "icon":"icon", "images":"imagesArr", "link":"link", "name":"name",
-					"picture":"picture", "source":"source", "updated_time":"updatedTime", "backdated_time":"backdatedTime",
-					"backdated_time_granularity":"backdatedTimeGranularity", "pageStoryId":"page_story_id", "place":"place", "name_tags":"nameTagsArr"});
-			
-			var parseProfPic:Function = HttpLoader.createParser(ProfilePicture, null,{"url":"url", "width":"width", "height":"height", "is_silhouette":"isSilhouette"});
-			
-			var parseLink:Function = HttpLoader.createParser(Photo, {"from":parseUser, "created_time":dateParser},
-				{"id":"id", "created_time":"createdTime", "description":"description", "from":"from",
-					"icon":"icon", "link":"link", "message":"message", "name":"name", "picture":"picture"});
-			
-			var parseComment:Function = HttpLoader.createParser(Comment, {"from":parseUser, "created_time":dateParser},
-				{"id":"id", "created_time":"createdTime", "message":"message", "from":"from"});
-			
-			var parseMessage:Function = HttpLoader.createParser(Message, {"from":parseUser, "created_time":dateParser, "updated_time":dateParser, "to":HttpLoader.createArrParser(parseUser)},
-				{"id":"id", "created_time":"createdTime", "to":"toArr", "comments.data":"commentsArr", "message":"message", "from":"from"});
-			
-			var parseThread:Function = HttpLoader.createParser(Thread, {"created_time":dateParser, "updated_time":dateParser, "to":HttpLoader.createArrParser(parseUser), "comments.data":HttpLoader.createArrParser(parseComment)},
-				{"id":"id", "created_time":"createdTime", "updated_time":"updatedTime", "to":"toArr", "comments.data":"commentsArr", "unread":"unread", "unseen":"unseen"});
-			
-			
-			var onUser:Function = HttpLoader.createHandler(parseUser);
-			var onUsers:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseUser), "data");
-			
-			var onAlbum:Function = HttpLoader.createHandler(parseAlbum);
-			var onAlbums:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseAlbum), "data");
-			
-			var onPhoto:Function = HttpLoader.createHandler(parsePhoto);
-			var onPhotos:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parsePhoto), "data");
-			
-			var onMessage:Function = HttpLoader.createHandler(parseMessage);
-			var onMessages:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseMessage), "data");
-			
-			var onThread:Function = HttpLoader.createHandler(parseThread);
-			var onThreads:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseThread), "data");
-			
-			var onProfPic:Function = HttpLoader.createHandler(parseProfPic, "data");
-			
-			var onLink:Function = HttpLoader.createHandler(parseLink);
-			
+			if(apiVersion && apiVersion.length)apiVersion += "/";
+			else apiVersion = "";
 			
 			_oauthUrl = new UrlProvider(true, AUTH_URL);
 			_oauthUrl.setupArrayToken(URL_PERMISSIONS, "+", permissions);
 			_oauthUrl.setToken(URL_CLIENT_ID, "");
 			_oauthUrl.setToken(URL_REDIRECT_URL, "");
+			_oauthUrl.setToken(URL_API_VERSION, apiVersion);
 			
 			_callUrl = new UrlProvider(true, API_URL);
+			_callUrl.setToken(URL_API_VERSION, apiVersion);
+			
 			_logoutUrl = new UrlProvider(true, LOGOUT_URL);
+			_logoutUrl.setToken(URL_API_VERSION, apiVersion);
 			
 			var doAdd:Boolean;
 			if(!auth){

@@ -19,12 +19,12 @@ package social.fb
 		
 		private var _fbMobileAuth:FacebookMobileAuth;
 		
-		public function FacebookMobileDistriqt(devKey:String, permissions:Array)
+		public function FacebookMobileDistriqt(devKey:String, permissions:Array, apiVersion:String=null, castObjects:Boolean=true)
 		{
 			if(FacebookMobileAuth.isSupported()){
 				_fbMobileAuth = new FacebookMobileAuth(devKey, permissions);
 			}
-			super("FacebookMobileDistriqt_v2", permissions, _fbMobileAuth);
+			super("FacebookMobileDistriqt", permissions, apiVersion, castObjects, _fbMobileAuth);
 			
 			if(_fbMobileAuth){
 				_platform.addGateway(FacebookPlatform.GATEWAY_OAUTH, _fbMobileAuth);

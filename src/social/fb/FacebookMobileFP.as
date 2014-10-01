@@ -22,12 +22,12 @@ package social.fb
 		
 		private var _fbMobileAuth:FacebookMobileAuth;
 		
-		public function FacebookMobileFP(permissions:Array)
+		public function FacebookMobileFP(permissions:Array, apiVersion:String=null, castObjects:Boolean=true)
 		{
 			if(FacebookMobileAuth.isSupported()){
 				_fbMobileAuth = new FacebookMobileAuth(permissions);
 			}
-			super("FacebookMobileFP_v2", permissions, _fbMobileAuth);
+			super("FacebookMobileFP", permissions, apiVersion, castObjects, _fbMobileAuth);
 			
 			if(_fbMobileAuth){
 				_platform.addGateway(FacebookPlatform.GATEWAY_OAUTH, _fbMobileAuth);

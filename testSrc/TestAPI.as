@@ -8,12 +8,9 @@ package
 	import com.bit101.components.Text;
 	import com.bit101.components.TextArea;
 	import com.bit101.components.VBox;
-	import com.distriqt.extension.facebookapi.base.hurlant.util.Base64;
 	
 	import flash.display.DisplayObject;
 	import flash.display.Sprite;
-	import flash.display.StageAlign;
-	import flash.display.StageScaleMode;
 	import flash.events.Event;
 	import flash.geom.Rectangle;
 	import flash.text.TextFormat;
@@ -31,9 +28,9 @@ package
 	import social.desc.CallDesc;
 	import social.dropbox.DropboxPlatform;
 	import social.fb.Facebook;
-	import social.fb.FacebookMobileDistriqt;
 	import social.fb.FacebookMobileFP;
 	import social.fb.FacebookPermissions;
+	import social.fb.FacebookVersions;
 	import social.instagram.InstagramPlatform;
 	import social.util.closure;
 	import social.web.StageWebViewProxy;
@@ -102,17 +99,21 @@ package
 			
 			_callCont = new VBox(_mainCont, 0, 30);
 			
-			/*var facebook:FacebookPlatform	= new FacebookPlatform([FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox]);
+			/*var facebook:FacebookPlatform	= new FacebookPlatform([FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox], FacebookVersions.V2_1);
 			facebook.setProp(FacebookPlatform.URL_CLIENT_ID, "262050547226244");
 			facebook.setProp(FacebookPlatform.URL_REDIRECT_URL, "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
 			addPlatform(facebook);*/
 			
 			/*var key:String = "YOUR_DISTRIQT_DEV_KEY";
-			var facebookMobile:FacebookMobileDistriqt = new FacebookMobileDistriqt(key, [FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox]);
+			var facebookMobile:FacebookMobileDistriqt = new FacebookMobileDistriqt(key, [FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox], FacebookVersions.V2_1);
 			facebookMobile.init("262050547226244", "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
 			addPlatform(facebookMobile.platform);*/
 			
-			var facebook:Facebook = new Facebook([FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox]);
+			/*var facebookMobile:FacebookMobileFP = new FacebookMobileFP([FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox], FacebookVersions.V2_1);
+			facebookMobile.init("262050547226244", "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
+			addPlatform(facebookMobile.platform);*/
+			
+			var facebook:Facebook = new Facebook([FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox], FacebookVersions.V2_1, false);
 			facebook.init("262050547226244", "http://devmobile.whitechimagine.com/imagine/mobile_redirect.php");
 			addPlatform(facebook.platform);
 			

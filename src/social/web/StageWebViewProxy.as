@@ -7,7 +7,6 @@ package social.web
 	import flash.geom.Rectangle;
 	import flash.media.StageWebView;
 	import flash.utils.Dictionary;
-	import flash.utils.setTimeout;
 	
 	import mx.resources.ResourceBundle;
 	
@@ -275,7 +274,7 @@ package social.web
 			_shown = false;
 		}
 		public function eval(js:String, responseHandler:Function=null):void{
-			if(responseHandler){
+			if(responseHandler!=null){
 				var id:int = _lastEvalId++;
 				_responseHandlers[id] = responseHandler;
 				_webView.loadURL("javascript:window.location.href = '"+COMMUNICATION_PROTOCOL+id+COMMUNICATION_DELIMITER+"'+("+js+")");

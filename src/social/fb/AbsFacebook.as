@@ -44,9 +44,9 @@ package social.fb
 		
 		protected var _platform:FacebookPlatform
 		
-		public function AbsFacebook(name:String, permissions:Array, auth:IAuth=null)
+		public function AbsFacebook(name:String, permissions:Array, apiVersion:String=null, castObjects:Boolean=true, auth:IAuth=null)
 		{
-			_platform = new FacebookPlatform(name, permissions, auth);
+			_platform = new FacebookPlatform(name, permissions, apiVersion, castObjects, auth);
 		}
 		public function setWebView(webView:IWebView):void{
 			_platform.setWebView(webView);
@@ -93,6 +93,10 @@ package social.fb
 		
 		public function getAlbum( albumId:String, onComplete:Function=null):void{
 			_platform.doCall(FacebookPlatform.CALL_ALBUM, {objectId:albumId}, onComplete);
+		}
+		
+		public function getPhoto( photoId:String, onComplete:Function=null):void{
+			_platform.doCall(FacebookPlatform.CALL_PHOTO, {objectId:photoId}, onComplete);
 		}
 		
 		public function getAlbumPicture( albumId:String, onComplete:Function=null):void{
