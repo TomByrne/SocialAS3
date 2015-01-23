@@ -1,9 +1,11 @@
 package social.fb
 {
-	public class FacebookPermissions
+	public class FacebookPermissions_v1
 	{
 		
 		public static const publish_stream:String = "publish_stream"
+		public static const basic_info:String = "basic_info"
+		public static const manage_friendlists:String = "manage_friendlists"
 		public static const create_event:String = "create_event"
 		public static const rsvp_event:String = "rsvp_event"
 		public static const sms:String = "sms"

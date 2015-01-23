@@ -29,7 +29,8 @@ package
 	import social.dropbox.DropboxPlatform;
 	import social.fb.Facebook;
 	import social.fb.FacebookMobileFP;
-	import social.fb.FacebookPermissions;
+	import social.fb.FacebookPermissions_v1;
+	import social.fb.FacebookPermissions_v2;
 	import social.fb.FacebookVersions;
 	import social.instagram.InstagramPlatform;
 	import social.util.closure;
@@ -99,23 +100,23 @@ package
 			
 			_callCont = new VBox(_mainCont, 0, 30);
 			
-			/*var facebook:FacebookPlatform	= new FacebookPlatform([FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox], FacebookVersions.V2_1);
+			/*var facebook:FacebookPlatform	= new FacebookPlatform([FacebookPermissions_v2.user_about_me, FacebookPermissions_v2.user_photos, FacebookPermissions_v2.read_mailbox], FacebookVersions.V2_1);
 			facebook.setProp(FacebookPlatform.URL_CLIENT_ID, "262050547226244");
 			facebook.setProp(FacebookPlatform.URL_REDIRECT_URL, "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
 			addPlatform(facebook);*/
 			
 			/*var key:String = "YOUR_DISTRIQT_DEV_KEY";
-			var facebookMobile:FacebookMobileDistriqt = new FacebookMobileDistriqt(key, [FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox], FacebookVersions.V2_1);
+			var facebookMobile:FacebookMobileDistriqt = new FacebookMobileDistriqt(key, [FacebookPermissions_v2.user_about_me, FacebookPermissions_v2.user_photos, FacebookPermissions_v2.read_mailbox], FacebookVersions.V2_1);
 			facebookMobile.init("262050547226244", "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
 			addPlatform(facebookMobile.platform);*/
 			
-			/*var facebookMobile:FacebookMobileFP = new FacebookMobileFP([FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox], FacebookVersions.V2_1);
+			var facebookMobile:FacebookMobileFP = new FacebookMobileFP([FacebookPermissions_v2.user_about_me, FacebookPermissions_v2.user_photos], FacebookVersions.V2_1);
 			facebookMobile.init("262050547226244", "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
-			addPlatform(facebookMobile.platform);*/
+			addPlatform(facebookMobile.platform);
 			
-			var facebook:Facebook = new Facebook([FacebookPermissions.user_about_me, FacebookPermissions.user_photos, FacebookPermissions.read_mailbox], FacebookVersions.V2_1, false);
+			/*var facebook:Facebook = new Facebook([FacebookPermissions_v1.user_about_me, FacebookPermissions_v1.user_photos, FacebookPermissions_v1.read_mailbox], FacebookVersions.V2_1, false);
 			facebook.init("262050547226244", "http://devmobile.whitechimagine.com/imagine/mobile_redirect.php");
-			addPlatform(facebook.platform);
+			addPlatform(facebook.platform);*/
 			
 			var dropbox:DropboxPlatform	= new DropboxPlatform();
 			dropbox.setProp(DropboxPlatform.URL_CLIENT_ID, "56je6nzxitw1avr");

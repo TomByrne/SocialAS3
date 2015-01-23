@@ -679,13 +679,10 @@ package social.fb
 		private function checkAuthUrl(url:String):Boolean{
 			return (
 				url.indexOf("facebook.com")==-1 || // allows for redirect URL
-				url.indexOf("facebook.com/dialog/oauth")!=-1 ||
-				url.indexOf("facebook.com/v1.0/dialog/oauth")!=-1 ||
-				url.indexOf("facebook.com/v2.0/dialog/oauth")!=-1 ||
-				url.indexOf("facebook.com/v2.1/dialog/oauth")!=-1 ||
-				url.indexOf("facebook.com/login")!=-1  ||
-				url.indexOf("facebook.com/recover")!=-1   ||
-				url.indexOf("facebook.com/checkpoint")!=-1 
+				url.indexOf("/dialog/oauth")!=-1 ||
+				url.indexOf("/login")!=-1  ||
+				url.indexOf("/recover")!=-1   ||
+				url.indexOf("/checkpoint")!=-1 
 			);
 		}
 	}

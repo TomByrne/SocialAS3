@@ -1,5 +1,7 @@
 package social.fb
 {
+	import com.freshplanet.ane.AirFacebook.Facebook;
+	
 	import social.social;
 	import social.core.PlatformState;
 	
@@ -22,9 +24,9 @@ package social.fb
 		
 		private var _fbMobileAuth:FacebookMobileAuth;
 		
-		public function FacebookMobileFP(permissions:Array, apiVersion:String=null, castObjects:Boolean=true)
+		public function FacebookMobileFP(permissions:Array, apiVersion:String=null, castObjects:Boolean=true, allowWebDialog:Boolean=true)
 		{
-			if(FacebookMobileAuth.isSupported()){
+			if(FacebookMobileAuth.isSupported() && (allowWebDialog || com.freshplanet.ane.AirFacebook.Facebook.getInstance().canPresentShareDialog())){
 				_fbMobileAuth = new FacebookMobileAuth(permissions);
 			}
 			super("FacebookMobileFP", permissions, apiVersion, castObjects, _fbMobileAuth);
@@ -47,6 +49,7 @@ import org.osflash.signals.Signal;
 
 import social.auth.IAuth;
 import social.core.IUrlProvider;
+import social.fb.FacebookPermissions_v2;
 import social.gateway.IGateway;
 import social.web.IWebView;
 
@@ -54,6 +57,9 @@ class FacebookMobileAuth implements IAuth, IGateway
 {
 	public static function isSupported():Boolean{
 		return Facebook.isSupported;
+	}
+	private static var PUBLISH_PERMS				:Array;{
+		PUBLISH_PERMS = [FacebookPermissions_v2.manage_notifications,FacebookPermissions_v2.manage_pages,FacebookPermissions_v2.publish_actions,FacebookPermissions_v2.publish_stream,FacebookPermissions_v2.rsvp_event];
 	}
 	
 	public static const URL_ACCESS_TOKEN			:String		= "${accessToken}";
@@ -105,8 +111,19 @@ class FacebookMobileAuth implements IAuth, IGateway
 		if(onComplete!=null)_onCompletes.push(onComplete);
 		
 		_pendingAuth = true;
-		_facebookMobile.openSessionWithReadPermissions(_permissions, onAuthComplete);
-		
+		if(hasPublishPermission(_permissions)){
+			_facebookMobile.openSessionWithPublishPermissions(_permissions, onAuthComplete);
+		}else{
+			_facebookMobile.openSessionWithReadPermissions(_permissions, onAuthComplete);
+		}
+	}
+	
+	private function hasPublishPermission(perms:Array):Boolean
+	{
+		for each(var perm:String in perms){
+			if(PUBLISH_PERMS.indexOf(perm)!=-1)return true;
+		}
+		return false;
 	}
 	
 	private function onAuthComplete(success:Boolean, userCancelled:Boolean, error:String):void
@@ -114,7 +131,16 @@ class FacebookMobileAuth implements IAuth, IGateway
 		_pendingAuth = false;
 		_accessToken = _facebookMobile.accessToken;
 		if(_accessTokenChanged)_accessTokenChanged.dispatch();
-		callComplete(success, error);
+		callComplete(success?success:null, error);
+		
+		if(success){
+			_facebookMobile.requestWithGraphPath("me/albums", null, "GET", onTestAlbums);
+		}
+	}
+	
+	private function onTestAlbums(... params):void
+	{
+		params = params;
 	}
 	public function cancelAuth():void
 	{
