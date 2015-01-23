@@ -103,7 +103,7 @@ package social.fb
 			_platform.doCall(FacebookPlatform.CALL_ALBUM_PICTURE, {objectId:albumId}, onComplete);
 		}
 		
-		public function getAlbumPhotos( albumId:String, onComplete:Function=null):void{
+		public function getAlbumPhotosAll( albumId:String, onComplete:Function=null):void{
 			_platform.doCall(FacebookPlatform.CALL_ALBUM_PHOTOS, {objectId:albumId}, onComplete);
 		}
 		
