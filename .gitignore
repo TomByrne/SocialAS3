@@ -5,3 +5,4 @@
 /build/cert.p12
 /libs/*.ane
 /bin-debug
+/build/libs

@@ -171,11 +171,13 @@ package social.gateway
 		public static function createPaginationHandler(parser:Function=null, dataProp:String=null, pagProp:String=null, errorResponseCheck:Function=null):Function
 		{
 			if(errorResponseCheck==null)errorResponseCheck = defaultErrorResponseCheck;
-			return _createPaginationHandler(parser, dataProp, pagProp, errorResponseCheck, []);
+			return _createPaginationHandler(parser, dataProp, pagProp, errorResponseCheck);
 		}
 		private static function _createPaginationHandler(parser:Function=null, dataProp:String=null, pagProp:String=null, errorResponseCheck:Function=null, addTo:Array=null, onMainComplete:Function=null):Function
 		{
 			return function(success:String, fail:*, onComplete:Function=null):void{
+				if(!addTo)addTo = [];
+				
 				if(onMainComplete!=null)onComplete = onMainComplete;
 				if(fail){
 					if(onComplete!=null)onComplete(null, fail || true);

@@ -129,7 +129,7 @@ package social.fb
 				var onAlbums:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseAlbum), "data");
 				
 				var onPhoto:Function = HttpLoader.createHandler(parsePhoto);
-				var onPhotos:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parsePhoto), "data");
+				var onPhotos:Function = HttpLoader.createPaginationHandler(HttpLoader.createArrParser(parsePhoto), "data", "paging.next");
 				
 				var onMessage:Function = HttpLoader.createHandler(parseMessage);
 				var onMessages:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseMessage), "data");
@@ -149,7 +149,7 @@ package social.fb
 				onAlbums = handler;
 				
 				onPhoto = handler;
-				onPhotos = handler;
+				onPhotos = HttpLoader.createPaginationHandler(null, "data", "paging.next");
 				
 				onMessage = handler;
 				onMessages = handler;
